@@ -70,7 +70,11 @@ Deferred (candidates for post-1.0, not committed):
     delegate returns a configuration only when the long-press point falls
     inside one, so long-presses elsewhere stay inert. Items become `UIAction`
     rows with the destructive/disabled attributes mapped. Menu dismissal always
-    reaches `onDismissRequest`.
+    reaches `onDismissRequest`. Because the interaction is host-wide, the
+    bridge assumes the Compose view fills its window and reports window
+    coordinates 1:1 with UIKit points (true for the sample's full-screen
+    `ComposeUIViewController`); nesting it offset inside a larger SwiftUI view
+    is out of scope.
 - `androidMain`/`desktopMain` actuals delegate to the pure implementation;
   they exist only so the `expect` compiles — `resolveNativeBridge()` already
   gates the native path to iOS.
@@ -93,5 +97,8 @@ Deferred (candidates for post-1.0, not committed):
 - CI's macOS runner compiles every iOS target, including this bridge, so
   breakage surfaces on iOS betas rather than after release (PRD §18 risk
   mitigation). Linking a runnable app/framework stays a local Xcode step.
+- Compilation and linking cannot prove gesture behaviour: the first run of a
+  new bridge component on a simulator should check that the system chrome
+  appears, dismisses, and leaves Compose gestures (scroll, drag, taps) intact.
 - A new component may join the bridge list only by editing this document in
   the same PR that implements it.
