@@ -60,15 +60,15 @@ Deferred (candidates for post-1.0, not committed):
   to `Dialog`/`ActionSheet`, the component renders pure Compose even when the
   bridge is enabled, because UIKit cannot host a Compose slot in these
   controllers. This is documented behavior, not a silent fallback.
-- UIKit code compiles only on macOS hosts; it is kept to boring, stable APIs
-  (`UIAlertController`, `UIAlertAction`, and later `UIDatePicker`,
-  `UIActivityViewController`) and exercised by the sample app's Kitchen Sink
-  on CI's macOS runner.
+- UIKit code needs Xcode only to *link*: Kotlin/Native cross-compiles the
+  `iosMain` klibs on any host, so type errors in this bridge surface in a plain
+  `./gradlew build` (that is how it was first compiled - on Windows). Xcode on
+  macOS is still required to produce a runnable app/framework.
 
 ## Maintenance policy
 
-- CI's macOS runner compiles every iOS target, including the sample's
-  `MainViewController` and this bridge, so breakage surfaces on iOS betas
-  rather than after release (PRD §18 risk mitigation).
+- CI's macOS runner compiles every iOS target, including this bridge, so
+  breakage surfaces on iOS betas rather than after release (PRD §18 risk
+  mitigation). Linking a runnable app/framework stays a local Xcode step.
 - A new component may join the bridge list only by editing this document in
   the same PR that implements it.

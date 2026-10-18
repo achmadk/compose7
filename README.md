@@ -73,14 +73,27 @@ Compose7Theme(style = Compose7Style.Cupertino) { … }
 ./gradlew publishToMavenLocal
 ```
 
-Requires JDK 21. iOS targets compile on macOS only (the CI matrix covers
-this); the iOS Native Bridge actuals are exercised by the sample app there.
+Requires JDK 21 for everything. Kotlin/Native cross-compiles iOS klibs on any
+host, so `compileKotlinIosArm64` and the UIKit bridge actuals are type-checked
+even on Windows/Linux. **Linking** an `.app`/framework still needs Xcode on
+macOS, so that step stays a local (or macOS-runner) concern; CI's `ios-sim`
+job compiles the simulator targets to catch bridge breakage.
 
 Android builds need **SDK Platform 37+**. Compose Multiplatform 1.12 ships
 AndroidX Compose artifacts whose AAR metadata declares a minimum `compileSdk`
 of 37, so the Gradle build (and any app consuming these modules) must compile
-against that platform — install it with
-`sdkmanager "platforms;android-37"`. The library's own `minSdk` stays 24.
+against that platform. Point Gradle at your SDK with `local.properties`
+(git-ignored, so it stays machine-specific):
+
+```properties
+# local.properties
+sdk.dir=/path/to/Android/Sdk
+```
+
+Install the platform with `sdkmanager "platforms;android-37"`, or let Android
+Studio do it on first sync. `compileSdk` is 37 while `targetSdk` stays 36, so
+the sample opts into new compile-time APIs without silently adopting new
+runtime behavior. The library's own `minSdk` is 24.
 
 ## Documentation
 
