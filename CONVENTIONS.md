@@ -124,8 +124,29 @@ fun ActionSheet(
 ## 7. Testing (PRD §13)
 
 Non-UI logic gets `commonTest` (`kotlin.test`) — date math, filter/autocomplete
-persistence logic, state reducers, index sectioning. UI-only components don't
-need tests here (screenshot tests are CI-side, later).
+persistence logic, state reducers, index sectioning.
+
+### Golden/screenshot tests
+
+`components-indicators` owns the baseline suite: 6 scenes
+(Material/Cupertino/DesktopUI7 × light/dark) rendered offscreen through
+`ImageComposeScene` at density 1. Baselines live in
+`src/desktopTest/resources/goldens`.
+
+- Keep golden scenes **shape/token only**. No text — a baseline rendered on a
+  developer machine must not depend on host fonts, so `Gauge(showValue = false)`
+  rather than a labeled control. Text-heavy components are covered by the
+  Kitchen Sink, not by goldens.
+- Regenerate after an intentional visual change, and commit the PNGs with it:
+
+  ```bash
+  COMPOSE7_GOLDENS_UPDATE=true ./gradlew :components-indicators:desktopTest
+  ```
+
+- The comparison tolerates anti-aliasing noise (≤1% of pixels may differ by
+  more than 24/255 per channel) and fails on a blank/transparent scene.
+- Add a scene to the same class when a component gains style-dependent
+  geometry or color; one baseline per style × brightness.
 
 ## 8. Done criteria
 
