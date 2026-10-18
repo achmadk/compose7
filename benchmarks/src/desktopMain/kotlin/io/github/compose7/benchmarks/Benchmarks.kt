@@ -3,13 +3,17 @@
 package io.github.compose7.benchmarks
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -18,12 +22,15 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -57,6 +64,14 @@ private const val Width = 480
 private const val Height = 800
 private const val WarmupFrames = 12
 private const val MeasuredFrames = 40
+
+/**
+ * Whole-workload repeats. Each variant is measured [Rounds] times and its best
+ * median is kept: JIT warm-up and GC noise otherwise favour whichever variant
+ * runs last, which is how an earlier version reported the feature-parity
+ * baseline as faster than the bare one.
+ */
+private const val Rounds = 3
 private const val FrameNanos = 16_000_000L
 
 private class Measurements(val label: String, val compose7: Double, val baseline: Double) {
@@ -72,10 +87,7 @@ fun main() {
     println("Tolerance: Compose7 <= ${maxRatio}x the hand-written baseline")
     println()
 
-    val results = listOf(
-        measureRecomposition(),
-        measureScroll(),
-    )
+    val results = measureRecomposition() + measureScroll()
 
     println()
     println("| workload | Compose7 ms/frame | baseline ms/frame | ratio |")
@@ -104,30 +116,41 @@ fun main() {
     println("All workloads within tolerance.")
 }
 
-private fun measureRecomposition(): Measurements {
+private fun measureRecomposition(): List<Measurements> {
     val compose7Workload = RecompositionWorkload()
-    val baselineWorkload = RecompositionWorkload()
+    val bareWorkload = RecompositionWorkload()
+    val parityWorkload = RecompositionWorkload()
 
-    val compose7 = runBenchmark(
-        content = { compose7Workload.Content(compose7 = true) },
+    val compose7 = bestOfRounds(
+        content = { compose7Workload.Content(Variant.Compose7) },
         advance = { compose7Workload.advance() },
     )
-    val baseline = runBenchmark(
-        content = { baselineWorkload.Content(compose7 = false) },
-        advance = { baselineWorkload.advance() },
+    val bare = bestOfRounds(
+        content = { bareWorkload.Content(Variant.Bare) },
+        advance = { bareWorkload.advance() },
     )
-    return Measurements("recomposition (10 buttons)", compose7, baseline)
+    val parity = bestOfRounds(
+        content = { parityWorkload.Content(Variant.Parity) },
+        advance = { parityWorkload.advance() },
+    )
+    return listOf(
+        Measurements("recomposition vs bare baseline", compose7, bare),
+        // Same visual tree, but with the accessibility/interaction plumbing a
+        // real button needs (clickable, semantics, min touch target, press
+        // source). Isolates "Kotlin is slower" from "Compose7 does more".
+        Measurements("recomposition vs parity baseline", compose7, parity),
+    )
 }
 
 private fun measureScroll(): Measurements {
     val compose7Workload = ScrollWorkload(compose7 = true)
     val baselineWorkload = ScrollWorkload(compose7 = false)
 
-    val compose7 = runBenchmark(
+    val compose7 = bestOfRounds(
         content = { compose7Workload.Content() },
         advance = { runBlocking { compose7Workload.state.scrollBy(120f) } },
     )
-    val baseline = runBenchmark(
+    val baseline = bestOfRounds(
         content = { baselineWorkload.Content() },
         advance = { runBlocking { baselineWorkload.state.scrollBy(120f) } },
     )
@@ -161,6 +184,12 @@ private fun runBenchmark(
     return median
 }
 
+/** Best of [Rounds] independent runs - see [Rounds]. */
+private fun bestOfRounds(
+    content: @Composable () -> Unit,
+    advance: () -> Unit,
+): Double = (1..Rounds).minOf { runBenchmark(content, advance) }
+
 private class RecompositionWorkload {
     var tick by mutableStateOf(0)
         private set
@@ -170,9 +199,9 @@ private class RecompositionWorkload {
     }
 
     @Composable
-    fun Content(compose7: Boolean) {
-        if (compose7) {
-            Compose7Theme(style = Compose7Style.Material, darkTheme = false) {
+    fun Content(variant: Variant) {
+        when (variant) {
+            Variant.Compose7 -> Compose7Theme(style = Compose7Style.Material, darkTheme = false) {
                 Column(
                     modifier = Modifier.fillMaxSize().padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -186,8 +215,8 @@ private class RecompositionWorkload {
                     }
                 }
             }
-        } else {
-            Column(
+
+            Variant.Bare -> Column(
                 modifier = Modifier.fillMaxSize().background(Color(0xFFFEF7FF)).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
@@ -206,9 +235,41 @@ private class RecompositionWorkload {
                     }
                 }
             }
+
+            Variant.Parity -> Column(
+                modifier = Modifier.fillMaxSize().background(Color(0xFFFEF7FF)).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                repeat(10) { index ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .clip(RoundedCornerShape(22.dp))
+                            .background(Color(0xFF6750A4))
+                            // Interaction + semantics cost a real button carries.
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                role = Role.Button,
+                                onClick = {},
+                            )
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        BasicText(
+                            text = "Parity $index $tick",
+                            style = TextStyle(color = Color.White, fontSize = 14.sp),
+                        )
+                    }
+                }
+            }
         }
     }
 }
+
+private enum class Variant { Compose7, Bare, Parity }
 
 private class ScrollWorkload(private val compose7: Boolean) {
     val state = LazyListState()
