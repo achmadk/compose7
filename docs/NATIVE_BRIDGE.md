@@ -1,6 +1,8 @@
 # Native Interop Bridge (iOS) — Component List & Rollout Order
 
-**Status:** finalized (Phase 0 planning deliverable, PRD §8.7 / §16)
+**Status:** 4 of 5 shipped — Dialog, ActionSheet, DatePicker, ShareSheet;
+ContextMenu pending. The list itself was finalized as the Phase 0 planning
+deliverable (PRD §8.7 / §16).
 **Scope:** iOS only. Android and Desktop always render Compose7's own
 token-driven styles.
 
