@@ -1,0 +1,41 @@
+name: iosApp
+options:
+  bundleIdPrefix: io.github.compose7
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    # Xcode 15+ sandboxes build scripts by default, which blocks Gradle from
+    # writing the framework outside the build directory.
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+targets:
+  iosApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: iosApp
+        excludes:
+          - Info.plist
+    info:
+      path: iosApp/Info.plist
+      properties:
+        CFBundleDisplayName: Compose7
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.compose7.sample
+        FRAMEWORK_SEARCH_PATHS:
+          - $(inherited)
+          - $(SRCROOT)/../sample-app/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+    preBuildScripts:
+      - name: Compile Compose7 framework
+        basedOnDependencyAnalysis: false
+        script: |
+          cd "$SRCROOT/.."
+          ./gradlew :sample-app:embedAndSignAppleFrameworkForXcode

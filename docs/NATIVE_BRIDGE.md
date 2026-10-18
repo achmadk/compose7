@@ -94,9 +94,10 @@ Deferred (candidates for post-1.0, not committed):
 
 ## Maintenance policy
 
-- CI's macOS runner compiles every iOS target, including this bridge, so
-  breakage surfaces on iOS betas rather than after release (PRD §18 risk
-  mitigation). Linking a runnable app/framework stays a local Xcode step.
+- CI's macOS runner compiles every iOS target **and builds the `iosApp` shell
+  for the simulator**, so breakage surfaces on iOS betas rather than after
+  release (PRD §18 risk mitigation). Signing/provisioning and gesture-level
+  behaviour still need a local Xcode run.
 - Compilation and linking cannot prove gesture behaviour: the first run of a
   new bridge component on a simulator should check that the system chrome
   appears, dismisses, and leaves Compose gestures (scroll, drag, taps) intact.

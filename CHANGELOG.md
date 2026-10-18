@@ -48,6 +48,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   fallback ordering, context-menu placement, and golden/screenshot baselines
   for indicators across every style × brightness (`desktopTest`).
 - **Sample app** (`sample-app`, `desktop-app`, `android-app`): Kitchen Sink
-  gallery exercising every component in every style.
+  gallery exercising every component in every style. A checked-in XcodeGen
+  shell (`iosApp/`) hosts it on iOS; CI builds that app for the simulator.
 
 [Unreleased]: https://github.com/compose7/compose7/compare/HEAD...HEAD

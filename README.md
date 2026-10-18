@@ -77,9 +77,10 @@ Compose7Theme(style = Compose7Style.Cupertino) { … }
 Requires JDK 21 for everything. Kotlin/Native cross-compiles iOS klibs on any
 host, so `compileKotlinIosArm64` and the UIKit bridge actuals are type-checked
 even on Windows/Linux. **Linking** the sample's framework needs Xcode on
-macOS: `./gradlew :sample-app:linkDebugFrameworkIosSimulatorArm64`. Step-by-step
-Xcode wiring is in [docs/IOS.md](docs/IOS.md); CI's `ios-sim` job compiles and
-links the simulator framework to catch bridge breakage.
+macOS: `./gradlew :sample-app:linkDebugFrameworkIosSimulatorArm64`. A checked-in
+[XcodeGen](https://github.com/yonaskolb/XcodeGen) app shell lives in `iosApp/`;
+step-by-step instructions are in [docs/IOS.md](docs/IOS.md), and CI's `ios-sim`
+job builds that app for the simulator to catch bridge breakage.
 
 Android builds need **SDK Platform 37+**. Compose Multiplatform 1.12 ships
 AndroidX Compose artifacts whose AAR metadata declares a minimum `compileSdk`

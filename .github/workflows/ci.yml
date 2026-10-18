@@ -59,7 +59,7 @@ jobs:
         run: ./gradlew :android-app:assembleDebug --stacktrace
 
   ios-sim:
-    name: iOS compile & link (simulator)
+    name: iOS app build (simulator)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +79,25 @@ jobs:
       - name: Compile iOS simulator target
         run: ./gradlew compileKotlinIosSimulatorArm64 --stacktrace
 
-      # Klib compilation type-checks source; linking proves the sample actually
-      # binary-links UIKit + Compose. No signing identity is involved.
-      - name: Link sample framework (simulator)
-        run: ./gradlew :sample-app:linkDebugFrameworkIosSimulatorArm64 --stacktrace
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: iosApp
+        run: xcodegen generate
+
+      # Builds the real app shell, so the Gradle embedAndSign phase, the
+      # framework search path, the Swift wrapper, and the link all get exercised.
+      # Signing is unnecessary for the simulator.
+      - name: Build sample app
+        run: |
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/xcode \
+            ARCHS=arm64 \
+            ONLY_ACTIVE_ARCH=YES \
+            CODE_SIGNING_ALLOWED=NO \
+            build
