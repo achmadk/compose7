@@ -51,6 +51,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   filtering, share-sheet fallback ordering, context-menu placement,
   toast/notification queues, and golden/screenshot baselines for indicators
   across every style × brightness (`desktopTest`).
+- **Benchmarks** (`benchmarks`, unpublished): offscreen recomposition and
+  scroll workloads compared with hand-written Compose baselines, with a
+  configurable 3x tolerance ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)).
+- **Release automation & compatibility matrix**: tag-driven signing and Maven
+  Central publishing (`.github/workflows/release.yml`,
+  [docs/RELEASING.md](docs/RELEASING.md)); CI builds and tests against the last
+  two stable Compose Multiplatform releases on Linux and macOS.
+- **Governance**: a README succession note with a defined hand-off trigger and
+  a release path a successor can follow without local state.
 - **Sample app** (`sample-app`, `desktop-app`, `android-app`): Kitchen Sink
   gallery exercising every component in every style. A checked-in XcodeGen
   shell (`iosApp/`) hosts it on iOS; CI builds that app for the simulator.

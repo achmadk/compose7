@@ -39,3 +39,6 @@ include(":templates")
 include(":sample-app")
 include(":desktop-app")
 include(":android-app")
+
+// Desktop microbenchmarks (not published) - `./gradlew :benchmarks:benchmark`
+include(":benchmarks")

@@ -69,10 +69,15 @@ Compose7Theme(style = Compose7Style.Cupertino) { … }
 ## Building
 
 ```bash
-./gradlew build                  # all modules, desktop + Android
-./gradlew :desktop-app:run       # run the Kitchen Sink on desktop
+./gradlew build                      # all modules, desktop + Android
+./gradlew desktopTest                # unit + golden tests
+./gradlew :desktop-app:run           # run the Kitchen Sink on desktop
+./gradlew :benchmarks:benchmark      # recomposition/scroll microbenchmarks
 ./gradlew publishToMavenLocal
 ```
+
+CI builds against the **last two stable Compose Multiplatform releases**
+(`-PcomposeVersion=…`) on Linux and macOS (PRD §10).
 
 Requires JDK 21 for everything. Kotlin/Native cross-compiles iOS klibs on any
 host, so `compileKotlinIosArm64` and the UIKit bridge actuals are type-checked
@@ -107,9 +112,40 @@ runtime behavior. The library's own `minSdk` is 24.
   rollout order, and contract (Phase 0 deliverable).
 - [docs/IOS.md](docs/IOS.md) — building the sample framework and wiring it into
   an Xcode app.
+- [docs/BENCHMARKS.md](docs/BENCHMARKS.md) — what the microbenchmarks measure,
+  the tolerance, and their limits.
+- [docs/RELEASING.md](docs/RELEASING.md) — tag-driven Maven Central releases,
+  required secrets, and the maintainer hand-off path.
 - [CHANGELOG.md](CHANGELOG.md)
 - API reference: generated with Dokka (`./gradlew dokkaHtml`) per release.
 - Framework7 → Compose7 concept map: PRD Appendix A (in-repo).
+
+## Governance & continuity
+
+Compose7 is MIT-licensed and currently maintained by
+[@achmadk](https://github.com/achmadk) on a personal account. That is the same
+starting position `compose-cupertino` had before it went dormant, so the
+hand-off is planned rather than left open-ended (PRD §3.7, §18):
+
+- **Transition trigger:** once the project secures sponsorship or funding, the
+  repository moves to an organization with at least two maintainers holding
+  Maven Central publish access. Nothing else is required to start that process.
+- **Releases are automated.** Pushing a `v*` tag builds, tests, signs, and
+  publishes every module from GitHub Actions
+  ([`.github/workflows/release.yml`](.github/workflows/release.yml)); no
+  artifact depends on a maintainer's laptop. The process and required secrets
+  are in [docs/RELEASING.md](docs/RELEASING.md).
+- **Credentials are revocable.** Central Portal tokens and the GPG key live in
+  repository secrets, not in personal config. On hand-off, rotate all five and
+  transfer the signing key — it is the only secret that cannot be regenerated
+  without losing continuity of signatures.
+- **The code stays forkable.** Every release is reproducible from its tag, and
+  the MIT license lets a fork publish the same source under new coordinates
+  without permission.
+
+This note lives in the README so it survives repository moves, and
+[docs/RELEASING.md](docs/RELEASING.md) is written for a successor who has never
+cut a release here.
 
 ## License
 

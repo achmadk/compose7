@@ -7,11 +7,13 @@ on:
 
 jobs:
   build-and-test:
-    name: Build & test (${{ matrix.os }})
+    name: Build & test (${{ matrix.os }}, CMP ${{ matrix.compose }})
     strategy:
       fail-fast: false
       matrix:
-        # Linux: desktop target + JVM tests. macOS: adds iOS targets.
+        # PRD §10: the last two stable Compose Multiplatform releases.
+        # `-PcomposeVersion` overrides the catalog value in buildSrc.
+        compose: ["1.12.2", "1.11.1"]
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -31,10 +33,13 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-37" || true
 
       - name: Build library & run desktop tests
-        run: ./gradlew build -x :sample-app:build -x :android-app:build -x :desktop-app:build --stacktrace
+        run: >-
+          ./gradlew build :sample-app:compileKotlinDesktop
+          -x :sample-app:build -x :android-app:build -x :desktop-app:build
+          -PcomposeVersion=${{ matrix.compose }} --stacktrace
 
       - name: Run desktop tests
-        run: ./gradlew desktopTest --stacktrace
+        run: ./gradlew desktopTest -PcomposeVersion=${{ matrix.compose }} --stacktrace
 
   android-assemble:
     name: Android assemble
@@ -57,6 +62,30 @@ jobs:
 
       - name: Assemble debug APK
         run: ./gradlew :android-app:assembleDebug --stacktrace
+
+  benchmarks:
+    name: Desktop benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Android SDK platform 37
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-37" || true
+
+      # PRD §12/§17: offscreen, software-rendered microbenchmarks with a
+      # hand-written baseline. Fails only beyond a generous 3x tolerance.
+      - name: Run microbenchmarks
+        run: ./gradlew :benchmarks:benchmark --stacktrace
 
   ios-sim:
     name: iOS app build (simulator)
