@@ -16,9 +16,10 @@ pick), inspired by [Framework7](https://framework7.io/)'s breadth.
   icon slots; affordances Compose7 draws itself (checkmarks, chevrons,
   steppers) are pure `Canvas`.
 - **Opt-in iOS native bridge.** For the handful of components where hand-drawn
-  fidelity drifts every WWDC (Alert, Action Sheet, Date wheel, Share sheet —
-  see [docs/NATIVE_BRIDGE.md](docs/NATIVE_BRIDGE.md)), enable real UIKit
-  rendering per theme or per component. Pure Compose stays the default.
+  fidelity drifts every WWDC (Alert, Action Sheet, Date wheel, Share sheet,
+  Context menu — see [docs/NATIVE_BRIDGE.md](docs/NATIVE_BRIDGE.md)), enable
+  real UIKit rendering per theme or per component. Pure Compose stays the
+  default.
 - **Modular artifacts.** Depend on `components-lists` without dragging in
   media or messaging.
 
@@ -33,7 +34,7 @@ pick), inspired by [Framework7](https://framework7.io/)'s breadth.
 | `io.github.compose7:components-navigation` | Navbar, Tabbar, Tabs, SegmentedControl, Panel, Searchbar |
 | `io.github.compose7:components-lists` | List, ListItem, Swipeout, SortableList, ListIndex, VirtualList |
 | `io.github.compose7:components-forms` | TextField, Checkbox, Radio, Switch, Stepper, Slider, SmartSelect, Autocomplete, Calendar/DatePicker, ColorPicker |
-| `io.github.compose7:components-overlays` | Dialog, ActionSheet, ShareSheet, SheetModal, Popover, Popup, Toast, Tooltip |
+| `io.github.compose7:components-overlays` | Dialog, ActionSheet, ShareSheet, ContextMenu, SheetModal, Popover, Popup, Toast, Tooltip |
 | `io.github.compose7:components-media` | Swiper, PhotoBrowser |
 | `io.github.compose7:components-data` | Accordion, Timeline, Breadcrumbs |
 | `io.github.compose7:components-messaging` | MessageList, MessageBar |

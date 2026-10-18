@@ -101,7 +101,9 @@ The gallery's shell has a **Native bridge** switch (`ShellScreen.kt`), backed by
 - the Dialog and Action Sheet demos render through `UIAlertController`;
 - the Forms screen's **Due date** field opens a real `UIDatePicker` wheel;
 - the Overlays **Share sheet** button opens the system
-  `UIActivityViewController`.
+  `UIActivityViewController`;
+- long-pressing the Overlays card opens a system context menu
+  (`UIContextMenuInteraction`).
 
 The component keeps its pure-Compose fallback for any dialog that passes a
 custom `content` slot, and every path outside iOS (including a `DatePicker`

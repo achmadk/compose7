@@ -1,8 +1,8 @@
 # Native Interop Bridge (iOS) — Component List & Rollout Order
 
-**Status:** 4 of 5 shipped — Dialog, ActionSheet, DatePicker, ShareSheet;
-ContextMenu pending. The list itself was finalized as the Phase 0 planning
-deliverable (PRD §8.7 / §16).
+**Status:** 5 of 5 shipped — Dialog, ActionSheet, DatePicker, ShareSheet,
+ContextMenu. The list itself was finalized as the Phase 0 planning deliverable
+(PRD §8.7 / §16).
 **Scope:** iOS only. Android and Desktop always render Compose7's own
 token-driven styles.
 
@@ -38,7 +38,7 @@ Compose — it never crashes.
 | 2 | `ActionSheet` | `UIAlertController` (action-sheet style) | 1 | Shipped | Same controller family as Alert — nearly free once #1 exists; iPad popover anchoring handled. |
 | 3 | `DatePicker` (wheel) | `UIDatePicker` (wheels style) | 2 | Shipped | The date wheel is famously hard to match by hand; the pure-Compose calendar remains the cross-platform default. |
 | 4 | `ShareSheet` | `UIActivityViewController` | 2 | Shipped | System share UI is per-definitionally native (share extensions, entitlements); pure-Compose cannot replicate it. |
-| 5 | `ContextMenu` | `UIContextMenuInteraction` | 2 | Not shipped | System haptics + preview annotations are UIKit-owned behavior. Needs an interaction delegate plus preview providers; tracked for the next bridge PR. |
+| 5 | `ContextMenu` | `UIContextMenuInteraction` | 2 | Shipped | System haptics + preview annotations are UIKit-owned behavior. |
 
 Deferred (candidates for post-1.0, not committed):
 
@@ -64,13 +64,21 @@ Deferred (candidates for post-1.0, not committed):
     single source of truth.
   - `NativeShareSheet` — `UIActivityViewController` with iPad popover anchoring
     and a completion handler that always reaches `onDismissRequest`.
+  - `NativeContextMenu` — one `UIContextMenuInteraction` attached to the
+    Compose host view (UIKit interactions belong to a `UIView`, not a Compose
+    node). Each `ContextMenu` registers its anchor's window rectangle; the
+    delegate returns a configuration only when the long-press point falls
+    inside one, so long-presses elsewhere stay inert. Items become `UIAction`
+    rows with the destructive/disabled attributes mapped. Menu dismissal always
+    reaches `onDismissRequest`.
 - `androidMain`/`desktopMain` actuals delegate to the pure implementation;
   they exist only so the `expect` compiles — `resolveNativeBridge()` already
   gates the native path to iOS.
 - **Pure fallbacks:** `Dialog`/`ActionSheet` render Compose chrome;
   `DatePicker` opens the Compose `Calendar`; `ShareSheet` renders an
   `ActionSheet` of the items and calls `onItemSelected`, which the native path
-  never invokes (the system owns the action list there).
+  never invokes (the system owns the action list there); `ContextMenu` opens a
+  `Popover` at the press point.
 - **Composable-slot escape hatch:** if a caller passes a custom `content` slot
   to `Dialog`/`ActionSheet`, the component renders pure Compose even when the
   bridge is enabled, because UIKit cannot host a Compose slot in these

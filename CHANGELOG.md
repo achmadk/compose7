@@ -27,8 +27,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `ListButton`, `ListSection`, `ContactsList`, `Swipeout`, `SortableList`,
   `ListIndex`, `VirtualList`.
 - **Overlays** (`components-overlays`): `Dialog` (+ destructive actions),
-  `ActionSheet`, `ShareSheet`, `SheetModal` (drag-to-dismiss), `Popover`,
-  `Popup`, `Toast`, `Tooltip`.
+  `ActionSheet`, `ShareSheet`, `ContextMenu`, `SheetModal` (drag-to-dismiss),
+  `Popover`, `Popup`, `Toast`, `Tooltip`.
 - **Forms** (`components-forms`): `TextField`, `TextArea`, `Checkbox`,
   `Radio`/`RadioGroup`, `Switch`, `Stepper`, `Slider`, `RangeSlider`,
   `SmartSelect`, `Autocomplete`, `Calendar` (+ `CalendarDate` date math),
@@ -39,12 +39,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Messaging** (`components-messaging`): `MessageList`, `MessageBar`.
 - **Templates** (`templates`): `LoginTemplate`.
 - **Native Interop Bridge (iOS, opt-in)**: `Dialog`, `ActionSheet`,
-  `DatePicker` (wheel), and `ShareSheet` can render through real UIKit views
-  (`UIAlertController`, `UIDatePicker`, `UIActivityViewController`); list and
-  rollout order in [docs/NATIVE_BRIDGE.md](docs/NATIVE_BRIDGE.md). Pure Compose
-  remains the default on every platform.
-- **Unit tests** for calendar bounds, autocomplete filtering, and the
-  share-sheet fallback ordering (`commonTest`, run on the desktop target).
+  `DatePicker` (wheel), `ShareSheet`, and `ContextMenu` can render through real
+  UIKit views (`UIAlertController`, `UIDatePicker`, `UIActivityViewController`,
+  `UIContextMenuInteraction`); list and rollout order in
+  [docs/NATIVE_BRIDGE.md](docs/NATIVE_BRIDGE.md). Pure Compose remains the
+  default on every platform.
+- **Unit tests** for calendar bounds, autocomplete filtering, the share-sheet
+  fallback ordering, context-menu placement, and golden/screenshot baselines
+  for indicators across every style × brightness (`desktopTest`).
 - **Sample app** (`sample-app`, `desktop-app`, `android-app`): Kitchen Sink
   gallery exercising every component in every style.
 

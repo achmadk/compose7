@@ -37,6 +37,9 @@ import io.github.compose7.components.navigation.TabSpec
 import io.github.compose7.components.overlays.ActionSheet
 import io.github.compose7.components.overlays.ActionSheetAction
 import io.github.compose7.components.overlays.ActionSheetActionRole
+import io.github.compose7.components.overlays.ContextMenu
+import io.github.compose7.components.overlays.ContextMenuItem
+import io.github.compose7.components.overlays.ContextMenuItemRole
 import io.github.compose7.components.overlays.Dialog
 import io.github.compose7.components.overlays.DialogAction
 import io.github.compose7.components.overlays.DialogActionRole
@@ -119,6 +122,38 @@ fun MediaScreen() {
                 text = "Share sheet",
                 variant = ButtonVariant.Text,
             )
+        }
+        Spacer(Modifier.height(8.dp))
+        ContextMenu(
+            items = listOf(
+                ContextMenuItem("Duplicate", onClick = {}),
+                ContextMenuItem("Archive", onClick = {}),
+                ContextMenuItem(
+                    "Delete",
+                    onClick = {},
+                    role = ContextMenuItemRole.Destructive,
+                ),
+            ),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(88.dp)
+                    .background(Compose7ThemeColors.surfaceVariant, Compose7ThemeShapes.card)
+                    .padding(16.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Column {
+                    BasicText(
+                        text = "Long-press this card",
+                        style = Compose7ThemeTypography.bodyLarge.copy(color = Compose7ThemeColors.onSurface),
+                    )
+                    BasicText(
+                        text = "Opens a context menu",
+                        style = Compose7ThemeTypography.bodySmall.copy(color = Compose7ThemeColors.onSurfaceVariant),
+                    )
+                }
+            }
         }
     }
 

@@ -45,10 +45,11 @@ Every public entry point in Compose7, grouped the way PRD §7 groups them.
 
 ## Overlays — `components-overlays`
 
-`Dialog` · `ActionSheet` · `ShareSheet` · `SheetModal` · `Popover` · `Popup` ·
-`Toast` · `Tooltip`. `Dialog`, `ActionSheet`, `DatePicker` (in
-`components-forms`), and `ShareSheet` can route through the opt-in iOS Native
-Interop Bridge — see [NATIVE_BRIDGE.md](NATIVE_BRIDGE.md).
+`Dialog` · `ActionSheet` · `ShareSheet` · `ContextMenu` · `SheetModal` ·
+`Popover` · `Popup` · `Toast` · `Tooltip`. `Dialog`, `ActionSheet`,
+`ContextMenu`, `DatePicker` (in `components-forms`), and `ShareSheet` can route
+through the opt-in iOS Native Interop Bridge — see
+[NATIVE_BRIDGE.md](NATIVE_BRIDGE.md).
 
 ## Media — `components-media`
 
