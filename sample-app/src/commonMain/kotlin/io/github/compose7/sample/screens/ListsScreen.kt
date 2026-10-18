@@ -1,9 +1,12 @@
 package io.github.compose7.sample.screens
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
@@ -32,6 +35,7 @@ import io.github.compose7.components.lists.List
 import io.github.compose7.components.lists.ListButton
 import io.github.compose7.components.lists.ListIndex
 import io.github.compose7.components.lists.ListItem
+import io.github.compose7.components.lists.ListOrientation
 import io.github.compose7.components.lists.ListSection
 import io.github.compose7.components.lists.ListStyle
 import io.github.compose7.components.lists.SwipeAction
@@ -165,6 +169,24 @@ fun ListsScreen() {
                     title = "Virtual row ${index + 1}",
                     subtitle = "Only visible rows compose",
                     showDivider = index < virtualCount - 1,
+                    onClick = {},
+                )
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        DemoCaption("Horizontal variant: a styled LazyRow.")
+        VirtualList(
+            orientation = ListOrientation.Horizontal,
+            style = ListStyle.Plain,
+            itemSpacing = 8.dp,
+            modifier = Modifier.height(96.dp),
+        ) {
+            items(count = 8) { index ->
+                ListItem(
+                    title = "Card ${index + 1}",
+                    subtitle = "Swipe sideways",
+                    modifier = Modifier.width(180.dp),
+                    showDivider = false,
                     onClick = {},
                 )
             }

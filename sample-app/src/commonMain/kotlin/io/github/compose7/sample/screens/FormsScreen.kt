@@ -23,6 +23,7 @@ import io.github.compose7.components.forms.CalendarDate
 import io.github.compose7.components.forms.Checkbox
 import io.github.compose7.components.forms.ColorPicker
 import io.github.compose7.components.forms.DatePicker
+import io.github.compose7.components.forms.DateRangePicker
 import io.github.compose7.components.forms.RadioGroup
 import io.github.compose7.components.forms.RadioOption
 import io.github.compose7.components.forms.RangeSlider
@@ -53,6 +54,9 @@ fun FormsScreen() {
     var fruit by remember { mutableStateOf<String?>(null) }
     var city by remember { mutableStateOf("") }
     var date by remember { mutableStateOf<CalendarDate?>(CalendarDate(2026, 10, 18)) }
+    var trip by remember {
+        mutableStateOf<ClosedRange<CalendarDate>?>(CalendarDate(2026, 10, 18)..CalendarDate(2026, 10, 24))
+    }
     var accent by remember { mutableStateOf(Color(0xFF2F6FED)) }
 
     DemoSection("Text fields") {
@@ -90,7 +94,17 @@ fun FormsScreen() {
     }
 
     DemoSection("Toggles") {
-        Checkbox(checked = accepted, onCheckedChange = { accepted = it }, label = "Accept terms")
+        Checkbox(
+            checked = accepted,
+            onCheckedChange = { accepted = it },
+            label = "Accept terms",
+            isError = !accepted,
+            supportingText = if (!accepted) {
+                { BasicText("Required to continue", style = Compose7ThemeTypography.bodySmall) }
+            } else {
+                null
+            },
+        )
         Spacer(Modifier.height(8.dp))
         Checkbox(checked = true, onCheckedChange = {}, label = "Checked")
         Spacer(Modifier.height(8.dp))
@@ -102,7 +116,11 @@ fun FormsScreen() {
                 style = Compose7ThemeTypography.bodyLarge.copy(color = Compose7ThemeColors.onSurface),
             )
             Spacer(Modifier.width(8.dp))
-            Switch(checked = notifications, onCheckedChange = { notifications = it })
+            Switch(
+                checked = notifications,
+                onCheckedChange = { notifications = it },
+                label = "Enabled",
+            )
         }
         Spacer(Modifier.height(6.dp))
         RadioGroup(
@@ -162,6 +180,14 @@ fun FormsScreen() {
             selectedDate = date,
             onDateSelected = { date = it },
             label = "Due date",
+            minDate = CalendarDate(2026, 1, 1),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(12.dp))
+        DateRangePicker(
+            selectedRange = trip,
+            onRangeSelected = { trip = it },
+            label = "Trip",
             minDate = CalendarDate(2026, 1, 1),
             modifier = Modifier.fillMaxWidth(),
         )

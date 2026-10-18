@@ -33,8 +33,8 @@ pick), inspired by [Framework7](https://framework7.io/)'s breadth.
 | `io.github.compose7:components-indicators` | ProgressBar, Preloader, Gauge, Skeleton |
 | `io.github.compose7:components-navigation` | Navbar, Tabbar, Tabs, SegmentedControl, Panel, Searchbar |
 | `io.github.compose7:components-lists` | List, ListItem, Swipeout, SortableList, ListIndex, VirtualList |
-| `io.github.compose7:components-forms` | TextField, Checkbox, Radio, Switch, Stepper, Slider, SmartSelect, Autocomplete, Calendar/DatePicker, ColorPicker |
-| `io.github.compose7:components-overlays` | Dialog, ActionSheet, ShareSheet, ContextMenu, SheetModal, Popover, Popup, Toast, Tooltip |
+| `io.github.compose7:components-forms` | TextField, Checkbox, Radio, Switch, Stepper, Slider, SmartSelect, Autocomplete, Calendar/Range, DatePicker/Range, ColorPicker |
+| `io.github.compose7:components-overlays` | Dialog, ActionSheet, ShareSheet, ContextMenu, SheetModal, Popover, Popup, Toast/ToastHost, Notification, Tooltip |
 | `io.github.compose7:components-media` | Swiper, PhotoBrowser |
 | `io.github.compose7:components-data` | Accordion, Timeline, Breadcrumbs |
 | `io.github.compose7:components-messaging` | MessageList, MessageBar |

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -58,6 +59,8 @@ fun Stepper(
     decreaseContentDescription: String = "Decrease",
     increaseContentDescription: String = "Increase",
     valueFormat: (Int) -> String = { it.toString() },
+    isError: Boolean = false,
+    supportingText: (@Composable () -> Unit)? = null,
 ) {
     val style = currentCompose7Style
     val colors = Compose7ThemeColors
@@ -79,50 +82,62 @@ fun Stepper(
         else -> shapes.input
     }
 
-    Row(
-        modifier = modifier
-            .clip(containerShape)
-            .background(colors.surfaceVariant)
-            .let {
-                if (style != Compose7Style.Cupertino) {
-                    it.border(BorderStroke(1.dp, colors.outlineVariant), containerShape)
-                } else {
-                    it
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .clip(containerShape)
+                .background(colors.surfaceVariant)
+                .let {
+                    if (style != Compose7Style.Cupertino) {
+                        it.border(
+                            BorderStroke(
+                                1.dp,
+                                when {
+                                    isError -> colors.error
+                                    else -> colors.outlineVariant
+                                },
+                            ),
+                            containerShape,
+                        )
+                    } else {
+                        it
+                    }
                 }
-            }
-            .height(controlHeight),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        StepperButton(
-            enabled = canDecrease,
-            contentDescription = decreaseContentDescription,
-            size = controlHeight,
-            glyphColor = glyphColor,
-            onClick = { commit((current - stepValue).coerceAtLeast(min)) },
-            glyph = { Minus(color = it) },
-        )
-        StepperDivider(style, controlHeight)
-        Box(
-            modifier = Modifier.widthIn(min = 48.dp).padding(horizontal = 4.dp),
-            contentAlignment = Alignment.Center,
+                .height(controlHeight),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            BasicText(
-                text = valueFormat(current),
-                style = type.titleMedium.copy(
-                    color = glyphColor,
-                    textAlign = TextAlign.Center,
-                ),
+            StepperButton(
+                enabled = canDecrease,
+                contentDescription = decreaseContentDescription,
+                size = controlHeight,
+                glyphColor = glyphColor,
+                onClick = { commit((current - stepValue).coerceAtLeast(min)) },
+                glyph = { Minus(color = it) },
+            )
+            StepperDivider(style, controlHeight)
+            Box(
+                modifier = Modifier.widthIn(min = 48.dp).padding(horizontal = 4.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                BasicText(
+                    text = valueFormat(current),
+                    style = type.titleMedium.copy(
+                        color = glyphColor,
+                        textAlign = TextAlign.Center,
+                    ),
+                )
+            }
+            StepperDivider(style, controlHeight)
+            StepperButton(
+                enabled = canIncrease,
+                contentDescription = increaseContentDescription,
+                size = controlHeight,
+                glyphColor = glyphColor,
+                onClick = { commit((current + stepValue).coerceAtMost(max)) },
+                glyph = { Plus(color = it) },
             )
         }
-        StepperDivider(style, controlHeight)
-        StepperButton(
-            enabled = canIncrease,
-            contentDescription = increaseContentDescription,
-            size = controlHeight,
-            glyphColor = glyphColor,
-            onClick = { commit((current + stepValue).coerceAtMost(max)) },
-            glyph = { Plus(color = it) },
-        )
+        FormFieldSupportingText(isError = isError, supportingText = supportingText)
     }
 }
 

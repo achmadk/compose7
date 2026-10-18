@@ -5,20 +5,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -49,9 +51,15 @@ internal fun defaultMonthTitle(date: CalendarDate): String =
  * The displayed month is owned internally and initialized from
  * [initialMonth] (defaults to the selected date's month).
  *
+ * For a two-ended selection use [CalendarRange], the same grid with range
+ * semantics (PRD §8.5: single date and range selection).
+ *
  * ```kotlin
  * Calendar(selectedDate = picked, onDateSelected = { picked = it })
  * ```
+ *
+ * @param weekdayLabels Seven labels starting at Monday; override for
+ *   localization (PRD §12: no hard-coded copy).
  */
 @Composable
 fun Calendar(
@@ -62,60 +70,184 @@ fun Calendar(
     firstDayOfWeek: Int = 1,
     isDateEnabled: (CalendarDate) -> Boolean = { true },
     monthTitle: (CalendarDate) -> String = { defaultMonthTitle(it) },
+    weekdayLabels: List<String> = WeekdayInitials,
+) {
+    val startOfWeek = firstDayOfWeek.coerceIn(1, 7)
+    val labels = usableWeekdayLabels(weekdayLabels)
+    var month by rememberSaveable(stateSaver = CalendarDateSaver) {
+        mutableStateOf(initialMonth.startOfMonth())
+    }
+
+    Column(modifier = modifier) {
+        CalendarHeader(
+            month = month,
+            monthTitle = monthTitle,
+            onMonthChange = { month = month.plusMonths(it) },
+        )
+        CalendarWeekdays(startOfWeek, labels)
+        CalendarGrid(
+            month = month,
+            startOfWeek = startOfWeek,
+            cellHeight = currentMinTouchTarget(),
+            isDateEnabled = isDateEnabled,
+            dayState = { date -> DayState(selected = date == selectedDate, inRange = false) },
+            onDateClick = onDateSelected,
+        )
+    }
+}
+
+/**
+ * Two-ended variant of [Calendar] (PRD §8.5: range selection). Tap once to set
+ * the start, again to set the end (taps before the start produce a normalized
+ * range), and a third time to start over. The live pending start is highlighted
+ * like a single selection.
+ *
+ * ```kotlin
+ * CalendarRange(selectedRange = trip, onRangeSelected = { trip = it })
+ * ```
+ */
+@Composable
+fun CalendarRange(
+    selectedRange: ClosedRange<CalendarDate>?,
+    onRangeSelected: (ClosedRange<CalendarDate>) -> Unit,
+    modifier: Modifier = Modifier,
+    initialMonth: CalendarDate = selectedRange?.start ?: CalendarDate(2000, 1, 1),
+    firstDayOfWeek: Int = 1,
+    isDateEnabled: (CalendarDate) -> Boolean = { true },
+    monthTitle: (CalendarDate) -> String = { defaultMonthTitle(it) },
+    weekdayLabels: List<String> = WeekdayInitials,
+) {
+    val startOfWeek = firstDayOfWeek.coerceIn(1, 7)
+    val labels = usableWeekdayLabels(weekdayLabels)
+    var month by rememberSaveable(stateSaver = CalendarDateSaver) {
+        mutableStateOf(initialMonth.startOfMonth())
+    }
+    val selection = remember { RangeSelectionState() }
+
+    Column(modifier = modifier) {
+        CalendarHeader(
+            month = month,
+            monthTitle = monthTitle,
+            onMonthChange = { month = month.plusMonths(it) },
+        )
+        CalendarWeekdays(startOfWeek, labels)
+        CalendarGrid(
+            month = month,
+            startOfWeek = startOfWeek,
+            cellHeight = currentMinTouchTarget(),
+            isDateEnabled = isDateEnabled,
+            dayState = { date -> dayStateOf(date, selection.pendingStart, selectedRange) },
+            onDateClick = { date ->
+                selection.tap(date)?.let(onRangeSelected)
+            },
+        )
+    }
+}
+
+/** Selection bookkeeping for [CalendarRange], extracted so the state machine is unit-tested. */
+internal class RangeSelectionState {
+    var pendingStart: CalendarDate? = null
+        private set
+
+    /**
+     * Records a tap. Returns `null` while waiting for the end date, then a
+     * normalized (start <= end) range and resets.
+     */
+    fun tap(date: CalendarDate): ClosedRange<CalendarDate>? {
+        val start = pendingStart
+        if (start == null) {
+            pendingStart = date
+            return null
+        }
+        pendingStart = null
+        return if (date < start) date..start else start..date
+    }
+
+    fun clear() {
+        pendingStart = null
+    }
+}
+
+private data class DayState(val selected: Boolean, val inRange: Boolean)
+
+private fun dayStateOf(
+    date: CalendarDate,
+    pendingStart: CalendarDate?,
+    range: ClosedRange<CalendarDate>?,
+): DayState {
+    if (date == pendingStart) return DayState(selected = true, inRange = false)
+    if (range == null) return DayState(selected = false, inRange = false)
+    val selected = date == range.start || date == range.endInclusive
+    val inRange = date > range.start && date < range.endInclusive
+    return DayState(selected = selected, inRange = inRange)
+}
+
+private fun usableWeekdayLabels(labels: List<String>): List<String> =
+    if (labels.size >= 7) labels else WeekdayInitials
+
+@Composable
+private fun CalendarHeader(
+    month: CalendarDate,
+    monthTitle: (CalendarDate) -> String,
+    onMonthChange: (Int) -> Unit,
 ) {
     val colors = Compose7ThemeColors
     val type = Compose7ThemeTypography
 
-    var month by rememberSaveable(stateSaver = CalendarDateSaver) {
-        mutableStateOf(initialMonth.startOfMonth())
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CalendarNavButton(previous = true, onClick = { onMonthChange(-1) })
+        BasicText(
+            text = monthTitle(month),
+            style = type.titleMedium.copy(
+                color = colors.onSurface,
+                textAlign = TextAlign.Center,
+            ),
+            modifier = Modifier.weight(1f),
+        )
+        CalendarNavButton(previous = false, onClick = { onMonthChange(1) })
     }
-    val startOfWeek = firstDayOfWeek.coerceIn(1, 7)
-    val cellHeight = currentMinTouchTarget()
+}
 
-    Column(modifier = modifier) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CalendarNavButton(previous = true, onClick = { month = month.minusMonths(1) })
-            BasicText(
-                text = monthTitle(month),
-                style = type.titleMedium.copy(
-                    color = colors.onSurface,
-                    textAlign = TextAlign.Center,
-                ),
-                modifier = Modifier.weight(1f),
-            )
-            CalendarNavButton(previous = false, onClick = { month = month.plusMonths(1) })
+@Composable
+private fun CalendarWeekdays(startOfWeek: Int, labels: List<String>) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        for (iso in startOfWeek..7) {
+            WeekdayLabel(labels[iso - 1], Modifier.weight(1f).padding(bottom = 4.dp))
         }
+        for (iso in 1 until startOfWeek) {
+            WeekdayLabel(labels[iso - 1], Modifier.weight(1f).padding(bottom = 4.dp))
+        }
+    }
+}
 
+@Composable
+private fun CalendarGrid(
+    month: CalendarDate,
+    startOfWeek: Int,
+    cellHeight: Dp,
+    isDateEnabled: (CalendarDate) -> Boolean,
+    dayState: (CalendarDate) -> DayState,
+    onDateClick: (CalendarDate) -> Unit,
+) {
+    val monthDays = daysInMonth(month.year, month.month)
+    val leadingBlanks = (month.dayOfWeek() - startOfWeek + 7) % 7
+    val cells = List(leadingBlanks + monthDays) { index ->
+        val day = index - leadingBlanks + 1
+        if (day in 1..monthDays) CalendarDate(month.year, month.month, day) else null
+    }
+    cells.chunked(7).forEach { week ->
         Row(modifier = Modifier.fillMaxWidth()) {
-            for (iso in startOfWeek..7) {
-                WeekdayLabel(WeekdayInitials[iso - 1], Modifier.weight(1f).padding(bottom = 4.dp))
-            }
-            for (iso in 1 until startOfWeek) {
-                WeekdayLabel(WeekdayInitials[iso - 1], Modifier.weight(1f).padding(bottom = 4.dp))
-            }
-        }
-
-        val monthDays = daysInMonth(month.year, month.month)
-        val leadingBlanks = (month.dayOfWeek() - startOfWeek + 7) % 7
-        val cells = List(leadingBlanks + monthDays) { index ->
-            val day = index - leadingBlanks + 1
-            if (day in 1..monthDays) CalendarDate(month.year, month.month, day) else null
-        }
-        cells.chunked(7).forEach { week ->
-            Row(modifier = Modifier.fillMaxWidth()) {
-                repeat(7) { column ->
-                    val date = week.getOrNull(column)
-                    CalendarDayCell(
-                        date = date,
-                        selected = date == selectedDate,
-                        enabled = date != null && isDateEnabled(date),
-                        indicatorSize = cellHeight,
-                        onClick = { if (date != null) onDateSelected(date) },
-                    )
-                }
+            repeat(7) { column ->
+                CalendarDayCell(
+                    date = week.getOrNull(column),
+                    state = week.getOrNull(column)?.let(dayState),
+                    enabled = week.getOrNull(column)?.let(isDateEnabled) ?: false,
+                    indicatorSize = cellHeight,
+                    onClick = { week.getOrNull(column)?.let(onDateClick) },
+                )
             }
         }
     }
@@ -154,13 +286,15 @@ private fun WeekdayLabel(label: String, modifier: Modifier) {
 @Composable
 private fun RowScope.CalendarDayCell(
     date: CalendarDate?,
-    selected: Boolean,
+    state: DayState?,
     enabled: Boolean,
     indicatorSize: Dp,
     onClick: () -> Unit,
 ) {
     val colors = Compose7ThemeColors
     val type = Compose7ThemeTypography
+    val selected = state?.selected == true
+    val inRange = state?.inRange == true
 
     Box(
         modifier = Modifier
@@ -177,6 +311,9 @@ private fun RowScope.CalendarDayCell(
         contentAlignment = Alignment.Center,
     ) {
         if (date != null) {
+            if (inRange) {
+                Box(Modifier.fillMaxSize().background(colors.primaryContainer))
+            }
             if (selected) {
                 Box(
                     Modifier
@@ -191,6 +328,7 @@ private fun RowScope.CalendarDayCell(
                     color = when {
                         !enabled -> colors.onSurfaceVariant.copy(alpha = 0.38f)
                         selected -> colors.onPrimary
+                        inRange -> colors.onPrimaryContainer
                         else -> colors.onSurface
                     },
                 ),

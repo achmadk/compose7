@@ -39,6 +39,7 @@ data class ShareItem(
  *
  * @param visible Presentation state; the call site owns it.
  * @param onItemSelected Pure-fallback hook. Not invoked on iOS.
+ * @param cancelLabel Label for the fallback's cancel row (PRD §12: caller-owned copy).
  * @param nativeBridge Per-component switch; `null` follows the theme.
  */
 @Composable
@@ -49,6 +50,7 @@ fun ShareSheet(
     modifier: Modifier = Modifier,
     nativeBridge: Boolean? = null,
     onItemSelected: (ShareItem) -> Unit = {},
+    cancelLabel: String = "Cancel",
 ) {
     if (!visible || items.isEmpty()) return
 
@@ -61,6 +63,7 @@ fun ShareSheet(
             items = items,
             modifier = modifier,
             onItemSelected = onItemSelected,
+            cancelLabel = cancelLabel,
         )
     }
 }
@@ -72,11 +75,13 @@ internal fun PureShareSheet(
     items: List<ShareItem>,
     modifier: Modifier,
     onItemSelected: (ShareItem) -> Unit,
+    cancelLabel: String = "Cancel",
 ) {
     val actions = shareSheetFallbackActions(
         items = items,
         onItemSelected = onItemSelected,
         onDismissRequest = onDismissRequest,
+        cancelLabel = cancelLabel,
     )
 
     PureActionSheet(
@@ -100,6 +105,7 @@ internal fun shareSheetFallbackActions(
     items: List<ShareItem>,
     onItemSelected: (ShareItem) -> Unit,
     onDismissRequest: () -> Unit,
+    cancelLabel: String = "Cancel",
 ): List<ActionSheetAction> = items.map { item ->
     ActionSheetAction(
         text = item.label,
@@ -108,4 +114,4 @@ internal fun shareSheetFallbackActions(
             onDismissRequest()
         },
     )
-} + ActionSheetAction("Cancel", onDismissRequest, ActionSheetActionRole.Cancel)
+} + ActionSheetAction(cancelLabel, onDismissRequest, ActionSheetActionRole.Cancel)

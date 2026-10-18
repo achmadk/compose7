@@ -1,5 +1,7 @@
 package io.github.compose7.components.forms
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -27,22 +29,28 @@ fun RangeSlider(
     steps: Int = 0,
     onValueChangeFinished: (() -> Unit)? = null,
     contentDescription: String? = null,
+    isError: Boolean = false,
+    supportingText: (@Composable () -> Unit)? = null,
 ) {
     val internalValue = remember { mutableStateOf(value) }
     LaunchedEffect(value) { if (onValueChange == null) internalValue.value = value }
     val current = if (onValueChange == null) internalValue.value else value
 
-    SliderImpl(
-        values = listOf(current.start, current.endInclusive),
-        onValuesChange = { list ->
-            val newRange = list[0]..list[1]
-            if (onValueChange == null) internalValue.value = newRange else onValueChange(newRange)
-        },
-        onValuesChangeFinished = onValueChangeFinished,
-        enabled = enabled,
-        valueRange = valueRange,
-        steps = steps,
-        contentDescription = contentDescription,
-        modifier = modifier,
-    )
+    Column(modifier = modifier) {
+        SliderImpl(
+            values = listOf(current.start, current.endInclusive),
+            onValuesChange = { list ->
+                val newRange = list[0]..list[1]
+                if (onValueChange == null) internalValue.value = newRange else onValueChange(newRange)
+            },
+            onValuesChangeFinished = onValueChangeFinished,
+            enabled = enabled,
+            valueRange = valueRange,
+            steps = steps,
+            contentDescription = contentDescription,
+            isError = isError,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        FormFieldSupportingText(isError = isError, supportingText = supportingText)
+    }
 }

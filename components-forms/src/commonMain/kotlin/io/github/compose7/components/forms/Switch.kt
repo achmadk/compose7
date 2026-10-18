@@ -5,7 +5,13 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import io.github.compose7.core.theme.Compose7MotionTokens
 import io.github.compose7.core.theme.Compose7Style
 import io.github.compose7.core.theme.Compose7ThemeColors
+import io.github.compose7.core.theme.Compose7ThemeTypography
 import io.github.compose7.core.theme.currentCompose7Style
 import io.github.compose7.foundation.compose7MinimumTouchTarget
 import io.github.compose7.foundation.compose7Toggleable
@@ -35,8 +42,11 @@ import io.github.compose7.foundation.compose7Toggleable
  * internally via `rememberSaveable`.
  *
  * ```kotlin
- * Switch(checked = on, onCheckedChange = { on = it })
+ * Switch(checked = on, onCheckedChange = { on = it }, label = "Notifications")
  * ```
+ *
+ * @param isError Tints an off track and the validation slot with the error color.
+ * @param supportingText Validation message slot (PRD §8.5).
  */
 @Composable
 fun Switch(
@@ -44,9 +54,13 @@ fun Switch(
     onCheckedChange: ((Boolean) -> Unit)? = null,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    label: String? = null,
+    isError: Boolean = false,
+    supportingText: (@Composable () -> Unit)? = null,
 ) {
     val style = currentCompose7Style
     val colors = Compose7ThemeColors
+    val type = Compose7ThemeTypography
     val motion = Compose7MotionTokens
 
     val state = rememberSaveable { mutableStateOf(false) }
@@ -71,8 +85,13 @@ fun Switch(
     val trackColor by animateColorAsState(
         targetValue = when {
             !enabled -> colors.surfaceVariant
-            cupertino -> if (current) colors.primary else colors.outline
+            cupertino -> when {
+                current -> colors.primary
+                isError -> colors.error.copy(alpha = 0.35f)
+                else -> colors.outline
+            }
             current -> colors.primary
+            isError -> colors.error.copy(alpha = 0.18f)
             else -> colors.surfaceVariant
         },
         animationSpec = tween(motion.mediumDurationMs, easing = motion.standardEasing),
@@ -85,34 +104,53 @@ fun Switch(
         else -> colors.outline
     }
 
-    Box(
-        modifier = modifier
-            .compose7Toggleable(
-                value = current,
-                onValueChange = { if (onCheckedChange == null) state.value = it else onCheckedChange(it) },
-                enabled = enabled,
-                role = Role.Switch,
-            )
-            .compose7MinimumTouchTarget(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Canvas(Modifier.size(trackWidth, trackHeight)) {
-            drawRoundRect(
-                color = trackColor,
-                cornerRadius = CornerRadius(size.height / 2f),
-            )
-            if (!cupertino && !current && enabled) {
-                drawRoundRect(
-                    color = colors.outline,
-                    style = Stroke(width = 2.dp.toPx()),
-                    cornerRadius = CornerRadius(size.height / 2f),
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .compose7Toggleable(
+                    value = current,
+                    onValueChange = { if (onCheckedChange == null) state.value = it else onCheckedChange(it) },
+                    enabled = enabled,
+                    role = Role.Switch,
+                )
+                .compose7MinimumTouchTarget()
+                .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Canvas(Modifier.size(trackWidth, trackHeight)) {
+                    drawRoundRect(
+                        color = trackColor,
+                        cornerRadius = CornerRadius(size.height / 2f),
+                    )
+                    if (!cupertino && !current && enabled) {
+                        drawRoundRect(
+                            color = if (isError) colors.error else colors.outline,
+                            style = Stroke(width = 2.dp.toPx()),
+                            cornerRadius = CornerRadius(size.height / 2f),
+                        )
+                    }
+                    drawCircle(
+                        color = knobColor,
+                        radius = knobSize.toPx() / 2f,
+                        center = Offset(knobOffset.toPx() + knobSize.toPx() / 2f, size.height / 2f),
+                    )
+                }
+            }
+            if (label != null) {
+                Spacer(Modifier.width(12.dp))
+                BasicText(
+                    text = label,
+                    style = type.bodyLarge.copy(
+                        color = when {
+                            !enabled -> colors.onSurface.copy(alpha = 0.38f)
+                            isError -> colors.error
+                            else -> colors.onSurface
+                        },
+                    ),
                 )
             }
-            drawCircle(
-                color = knobColor,
-                radius = knobSize.toPx() / 2f,
-                center = Offset(knobOffset.toPx() + knobSize.toPx() / 2f, size.height / 2f),
-            )
         }
+        FormFieldSupportingText(isError = isError, supportingText = supportingText)
     }
 }

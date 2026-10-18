@@ -6,7 +6,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,23 +62,29 @@ fun Slider(
     steps: Int = 0,
     onValueChangeFinished: (() -> Unit)? = null,
     contentDescription: String? = null,
+    isError: Boolean = false,
+    supportingText: (@Composable () -> Unit)? = null,
 ) {
     val internalValue = remember { mutableStateOf(value) }
     LaunchedEffect(value) { if (onValueChange == null) internalValue.value = value }
     val current = if (onValueChange == null) internalValue.value else value
 
-    SliderImpl(
-        values = listOf(current),
-        onValuesChange = { list ->
-            if (onValueChange == null) internalValue.value = list.first() else onValueChange(list.first())
-        },
-        onValuesChangeFinished = onValueChangeFinished,
-        enabled = enabled,
-        valueRange = valueRange,
-        steps = steps,
-        contentDescription = contentDescription,
-        modifier = modifier,
-    )
+    Column(modifier = modifier) {
+        SliderImpl(
+            values = listOf(current),
+            onValuesChange = { list ->
+                if (onValueChange == null) internalValue.value = list.first() else onValueChange(list.first())
+            },
+            onValuesChangeFinished = onValueChangeFinished,
+            enabled = enabled,
+            valueRange = valueRange,
+            steps = steps,
+            contentDescription = contentDescription,
+            isError = isError,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        FormFieldSupportingText(isError = isError, supportingText = supportingText)
+    }
 }
 
 @Composable
@@ -89,6 +97,7 @@ internal fun SliderImpl(
     steps: Int,
     contentDescription: String?,
     modifier: Modifier,
+    isError: Boolean = false,
 ) {
     val style = currentCompose7Style
     val colors = Compose7ThemeColors
@@ -198,7 +207,7 @@ internal fun SliderImpl(
             val activeRight = xFor(maxV)
             if (activeRight > activeLeft) {
                 drawRoundRect(
-                    color = colors.primary,
+                    color = if (isError) colors.error else colors.primary,
                     topLeft = Offset(activeLeft, trackTop),
                     size = Size(activeRight - activeLeft, trackHeightPx),
                     cornerRadius = trackCornerRadius,
@@ -220,13 +229,17 @@ internal fun SliderImpl(
                     Compose7Style.Cupertino -> {
                         drawCircle(color = colors.surface, radius = r, center = Offset(x, cy))
                         drawCircle(
-                            color = colors.outline,
+                            color = if (isError) colors.error else colors.outline,
                             radius = r,
                             center = Offset(x, cy),
                             style = Stroke(width = 1.dp.toPx()),
                         )
                     }
-                    else -> drawCircle(color = colors.primary, radius = r, center = Offset(x, cy))
+                    else -> drawCircle(
+                        color = if (isError) colors.error else colors.primary,
+                        radius = r,
+                        center = Offset(x, cy),
+                    )
                 }
             }
         }

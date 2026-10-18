@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -40,6 +41,9 @@ import io.github.compose7.foundation.compose7Toggleable
  * ```kotlin
  * Checkbox(checked = agreed, onCheckedChange = { agreed = it }, label = "I agree")
  * ```
+ *
+ * @param isError Tints the box and validation slot with the error color.
+ * @param supportingText Validation message slot (PRD §8.5).
  */
 @Composable
 fun Checkbox(
@@ -49,6 +53,8 @@ fun Checkbox(
     enabled: Boolean = true,
     indeterminate: Boolean = false,
     label: String? = null,
+    isError: Boolean = false,
+    supportingText: (@Composable () -> Unit)? = null,
 ) {
     val colors = Compose7ThemeColors
     val type = Compose7ThemeTypography
@@ -66,47 +72,61 @@ fun Checkbox(
     val boxShape = if (style == Compose7Style.Cupertino) shapes.medium else shapes.extraSmall
     val markColor: Color = colors.onPrimary
 
-    Row(
-        modifier = modifier
-            .compose7Toggleable(
-                value = current || indeterminate,
-                onValueChange = { toggle(if (indeterminate) true else it) },
-                enabled = enabled,
-                role = Role.Checkbox,
-            )
-            .compose7MinimumTouchTarget()
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
+    Column(modifier = modifier) {
+        Row(
             modifier = Modifier
-                .size(boxSize)
-                .clip(boxShape)
-                .let {
-                    if (current || indeterminate) {
-                        it.background(colors.primary)
-                    } else {
-                        it.border(
-                            BorderStroke(2.dp, if (enabled) colors.outline else colors.outline.copy(alpha = 0.38f)),
-                            boxShape,
-                        )
-                    }
-                },
-            contentAlignment = Alignment.Center,
+                .compose7Toggleable(
+                    value = current || indeterminate,
+                    onValueChange = { toggle(if (indeterminate) true else it) },
+                    enabled = enabled,
+                    role = Role.Checkbox,
+                )
+                .compose7MinimumTouchTarget()
+                .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            when {
-                indeterminate -> Minus(color = markColor, size = markSize)
-                current -> Check(color = markColor, size = markSize)
+            Box(
+                modifier = Modifier
+                    .size(boxSize)
+                    .clip(boxShape)
+                    .let {
+                        if (current || indeterminate) {
+                            it.background(colors.primary)
+                        } else {
+                            it.border(
+                                BorderStroke(
+                                    2.dp,
+                                    when {
+                                        !enabled -> colors.outline.copy(alpha = 0.38f)
+                                        isError -> colors.error
+                                        else -> colors.outline
+                                    },
+                                ),
+                                boxShape,
+                            )
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                when {
+                    indeterminate -> Minus(color = markColor, size = markSize)
+                    current -> Check(color = markColor, size = markSize)
+                }
+            }
+            if (label != null) {
+                Spacer(Modifier.width(12.dp))
+                BasicText(
+                    text = label,
+                    style = type.bodyLarge.copy(
+                        color = when {
+                            !enabled -> colors.onSurface.copy(alpha = 0.38f)
+                            isError -> colors.error
+                            else -> colors.onSurface
+                        },
+                    ),
+                )
             }
         }
-        if (label != null) {
-            Spacer(Modifier.width(12.dp))
-            BasicText(
-                text = label,
-                style = type.bodyLarge.copy(
-                    color = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = 0.38f),
-                ),
-            )
-        }
+        FormFieldSupportingText(isError = isError, supportingText = supportingText)
     }
 }

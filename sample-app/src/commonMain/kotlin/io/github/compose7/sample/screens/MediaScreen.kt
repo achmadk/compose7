@@ -32,6 +32,7 @@ import io.github.compose7.components.messaging.Message
 import io.github.compose7.components.messaging.MessageBar
 import io.github.compose7.components.messaging.MessageList
 import io.github.compose7.components.navigation.Searchbar
+import io.github.compose7.components.navigation.TabIndicatorPlacement
 import io.github.compose7.components.navigation.Tabs
 import io.github.compose7.components.navigation.TabSpec
 import io.github.compose7.components.overlays.ActionSheet
@@ -43,16 +44,20 @@ import io.github.compose7.components.overlays.ContextMenuItemRole
 import io.github.compose7.components.overlays.Dialog
 import io.github.compose7.components.overlays.DialogAction
 import io.github.compose7.components.overlays.DialogActionRole
+import io.github.compose7.components.overlays.NotificationHost
 import io.github.compose7.components.overlays.Popup
 import io.github.compose7.components.overlays.ShareItem
 import io.github.compose7.components.overlays.ShareItemKind
 import io.github.compose7.components.overlays.ShareSheet
 import io.github.compose7.components.overlays.SheetModal
-import io.github.compose7.components.overlays.Toast
+import io.github.compose7.components.overlays.ToastHost
 import io.github.compose7.components.overlays.Tooltip
+import io.github.compose7.components.overlays.rememberNotificationState
+import io.github.compose7.components.overlays.rememberToastState
 import io.github.compose7.core.theme.Compose7ThemeColors
 import io.github.compose7.core.theme.Compose7ThemeTypography
 import io.github.compose7.core.theme.Compose7ThemeShapes
+import io.github.compose7.foundation.Check
 
 private val ToastMessages = listOf(
     "Saved to your library",
@@ -78,7 +83,8 @@ fun MediaScreen() {
     var actionSheetVisible by remember { mutableStateOf(false) }
     var shareSheetVisible by remember { mutableStateOf(false) }
     var popupVisible by remember { mutableStateOf(false) }
-    var toastText by remember { mutableStateOf<String?>(null) }
+    val toasts = rememberToastState()
+    val notifications = rememberNotificationState()
     var photoBrowserVisible by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var tabIndex by remember { mutableStateOf(0) }
@@ -107,9 +113,20 @@ fun MediaScreen() {
         Spacer(Modifier.height(8.dp))
         DemoRow {
             Button(
-                onClick = { toastText = ToastMessages.random() },
+                onClick = { toasts.show(ToastMessages.random()) },
                 text = "Toast",
                 variant = ButtonVariant.Tonal,
+            )
+            Button(
+                onClick = {
+                    notifications.show(
+                        title = "Upload complete",
+                        text = "3 files are ready.",
+                        durationMillis = 4_000,
+                    )
+                },
+                text = "Notification",
+                variant = ButtonVariant.Outline,
             )
             Tooltip(
                 positionProvider = BelowAnchorProvider,
@@ -166,9 +183,14 @@ fun MediaScreen() {
         )
         Spacer(Modifier.height(8.dp))
         Tabs(
-            tabs = listOf(TabSpec("All"), TabSpec("Unread"), TabSpec("Flagged")),
+            tabs = listOf(
+                TabSpec("All", icon = { Check(color = Compose7ThemeColors.primary, size = 14.dp) }),
+                TabSpec("Unread"),
+                TabSpec("Flagged"),
+            ),
             selectedIndex = tabIndex,
             onSelect = { tabIndex = it },
+            indicatorPlacement = TabIndicatorPlacement.Top,
         )
         BasicText(
             text = "Query: $query | Tab: $tabIndex",
@@ -315,12 +337,8 @@ fun MediaScreen() {
         Button(onClick = { popupVisible = false }, text = "Dismiss", modifier = Modifier.fillMaxWidth())
     }
 
-    toastText?.let { message ->
-        Toast(
-            text = message,
-            onDismissRequest = { toastText = null },
-        )
-    }
+    ToastHost(toasts)
+    NotificationHost(notifications)
 
     PhotoBrowser(
         items = listOf(

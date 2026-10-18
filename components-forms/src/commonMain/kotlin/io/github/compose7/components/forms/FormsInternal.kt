@@ -44,6 +44,28 @@ import io.github.compose7.foundation.LocalContentColor
 import kotlin.math.roundToInt
 
 /**
+ * Validation slot shared by every form control (PRD §8.5: all inputs expose
+ * `isError` plus a supporting-text slot). Renders nothing when the caller
+ * passes `null`.
+ */
+@Composable
+internal fun FormFieldSupportingText(
+    isError: Boolean,
+    supportingText: (@Composable () -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    if (supportingText == null) return
+    val colors = Compose7ThemeColors
+    Column(modifier = modifier.padding(start = 4.dp, top = 4.dp)) {
+        CompositionLocalProvider(
+            LocalContentColor provides if (isError) colors.error else colors.onSurfaceVariant,
+        ) {
+            supportingText()
+        }
+    }
+}
+
+/**
  * Shared text-input core behind [TextField], [TextArea] (PRD §8.5: every input
  * gets `value`/`onValueChange`, an `isError` flag, and a supporting-text slot).
  *

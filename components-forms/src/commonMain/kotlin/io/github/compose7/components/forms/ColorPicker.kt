@@ -55,6 +55,8 @@ import kotlin.math.min
  * @param showAlpha Adds an opacity bar under the hue bar; the emitted [Color]
  *   carries the selected alpha.
  * @param presets Quick-pick swatches rendered below the bars. Empty hides them.
+ * @param isError Tints the hex readout and validation slot with the error color.
+ * @param supportingText Validation message slot (PRD §8.5).
  */
 @Composable
 fun ColorPicker(
@@ -64,6 +66,8 @@ fun ColorPicker(
     enabled: Boolean = true,
     showAlpha: Boolean = false,
     presets: List<Color> = emptyList(),
+    isError: Boolean = false,
+    supportingText: (@Composable () -> Unit)? = null,
 ) {
     val colors = Compose7ThemeColors
     val shapes = Compose7ThemeShapes
@@ -195,8 +199,11 @@ fun ColorPicker(
         Spacer(Modifier.height(8.dp))
         BasicText(
             text = current.toHex(),
-            style = type.labelMedium.copy(color = colors.onSurfaceVariant),
+            style = type.labelMedium.copy(
+                color = if (isError) colors.error else colors.onSurfaceVariant,
+            ),
         )
+        FormFieldSupportingText(isError = isError, supportingText = supportingText)
     }
 }
 

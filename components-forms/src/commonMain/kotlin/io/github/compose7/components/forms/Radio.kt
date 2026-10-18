@@ -53,6 +53,7 @@ fun Radio(
     onSelectedChange: ((Boolean) -> Unit)? = null,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    isError: Boolean = false,
 ) {
     val colors = Compose7ThemeColors
 
@@ -61,8 +62,9 @@ fun Radio(
 
     val ringColor = when {
         current -> colors.primary
-        enabled -> colors.outline
-        else -> colors.outline.copy(alpha = 0.38f)
+        !enabled -> colors.outline.copy(alpha = 0.38f)
+        isError -> colors.error
+        else -> colors.outline
     }
 
     Box(
@@ -120,6 +122,8 @@ fun RadioGroup(
     onSelectedChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    isError: Boolean = false,
+    supportingText: (@Composable () -> Unit)? = null,
 ) {
     val colors = Compose7ThemeColors
     val type = Compose7ThemeTypography
@@ -146,7 +150,7 @@ fun RadioGroup(
                     .padding(horizontal = Compose7StyleInfo.listContentInset, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Radio(selected = isSelected, enabled = rowEnabled)
+                Radio(selected = isSelected, enabled = rowEnabled, isError = isError)
                 Spacer(Modifier.width(12.dp))
                 BasicText(
                     text = option.label,
@@ -156,5 +160,6 @@ fun RadioGroup(
                 )
             }
         }
+        FormFieldSupportingText(isError = isError, supportingText = supportingText)
     }
 }

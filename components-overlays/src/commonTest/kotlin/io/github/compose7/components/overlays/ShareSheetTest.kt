@@ -52,6 +52,13 @@ class ShareSheetTest {
     }
 
     @Test
+    fun cancelLabelIsCallerOwned() {
+        val actions = shareSheetFallbackActions(items, {}, {}, cancelLabel = "Batal")
+        assertEquals("Batal", actions.last().text)
+        assertEquals(ActionSheetActionRole.Cancel, actions.last().role)
+    }
+
+    @Test
     fun emptyItemsStillOfferCancel() {
         val actions = shareSheetFallbackActions(emptyList(), {}, {})
         assertEquals(listOf("Cancel"), actions.map { it.text })

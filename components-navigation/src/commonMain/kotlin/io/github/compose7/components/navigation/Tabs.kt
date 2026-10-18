@@ -46,10 +46,14 @@ import io.github.compose7.core.theme.currentCompose7Style
 import io.github.compose7.foundation.Divider
 import io.github.compose7.foundation.compose7Clickable
 
-/** One tab in a [Tabs] row (PRD §7 P0 "Tabs"): a label plus an optional trailing badge slot. */
+/** Which edge of the tab row carries the active indicator (PRD §8.2: top and bottom placements). */
+enum class TabIndicatorPlacement { Bottom, Top }
+
+/** One tab in a [Tabs] row (PRD §7 P0 "Tabs"): an optional icon, a label, and a trailing badge slot. */
 @Immutable
 class TabSpec(
     val label: String,
+    val icon: (@Composable () -> Unit)? = null,
     val badge: (@Composable () -> Unit)? = null,
 )
 
@@ -74,6 +78,7 @@ fun Tabs(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     scrollable: Boolean = false,
+    indicatorPlacement: TabIndicatorPlacement = TabIndicatorPlacement.Bottom,
     containerColor: Color? = null,
     contentColor: Color? = null,
 ) {
@@ -119,7 +124,13 @@ fun Tabs(
                         .background(colors.primaryContainer, Compose7ThemeShapes.medium)
                 } else {
                     Modifier
-                        .align(Alignment.BottomCenter)
+                        .align(
+                            if (indicatorPlacement == TabIndicatorPlacement.Top) {
+                                Alignment.TopCenter
+                            } else {
+                                Alignment.BottomCenter
+                            },
+                        )
                         .offset(x = x)
                         .width(w)
                         .height(if (style == Compose7Style.Material) 3.dp else 2.dp)
@@ -167,6 +178,8 @@ fun Tabs(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            val icon = tab.icon
+                            if (icon != null) icon()
                             BasicText(
                                 text = tab.label,
                                 style = labelStyle.copy(

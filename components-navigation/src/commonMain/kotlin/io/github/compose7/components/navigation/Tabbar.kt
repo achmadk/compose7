@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsets
@@ -55,19 +56,29 @@ class TabData(
     val contentDescription: String? = null,
 )
 
+/** Which edge a [Tabbar] sits on (PRD §8.2: top and bottom placements). */
+enum class TabbarPlacement { Bottom, Top }
+
 /**
- * Bottom tab bar (PRD §8.2 / Appendix A "Tabbar"): icon+label destinations
- * with badge overlays and correct bottom safe-area inset.
+ * Bottom (or top) tab bar (PRD §8.2 / Appendix A "Tabbar"): icon+label
+ * destinations with badge overlays and the correct system-bar inset for the
+ * chosen edge.
  *
  * Style branch (PRD §9): Material — surface background, primary-color active
- * label/icon, no indicator; Cupertino — flat surface with a top hairline,
- * primary active / onSurfaceVariant inactive; DesktopUI7 — top border plus a
- * small primary pill under the active label. All heights are 56/49/48dp plus
- * the navigation-bar inset.
+ * label/icon, no indicator; Cupertino — flat surface with a hairline on the
+ * screen edge, primary active / onSurfaceVariant inactive; DesktopUI7 — border
+ * on the screen edge plus a small primary pill under the active label. All
+ * heights are 56/49/48dp plus the placement's inset.
  *
  * ```kotlin
  * Tabbar(tabs, selectedIndex = index, onSelect = { index = it })
  * ```
+ *
+ * @param placement [TabbarPlacement.Bottom] by default; [TabbarPlacement.Top]
+ *   flips the hairline and applies the status-bar inset instead of the
+ *   navigation-bar one.
+ * @param applySystemBarInset Applies the inset for [placement]; turn off when
+ *   the bar is already inside an inset-aware scaffold.
  */
 @Composable
 fun Tabbar(
@@ -75,9 +86,10 @@ fun Tabbar(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    placement: TabbarPlacement = TabbarPlacement.Bottom,
     containerColor: Color? = null,
     contentColor: Color? = null,
-    applyBottomInset: Boolean = true,
+    applySystemBarInset: Boolean = true,
 ) {
     val style = currentCompose7Style
     val colors = Compose7ThemeColors
@@ -93,14 +105,17 @@ fun Tabbar(
         color = containerColor ?: colors.surface,
         contentColor = contentColor ?: colors.onSurface,
     ) {
+        val top = placement == TabbarPlacement.Top
         Column(
-            modifier = if (applyBottomInset) {
-                Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+            modifier = if (applySystemBarInset) {
+                Modifier.windowInsetsPadding(
+                    if (top) WindowInsets.statusBars else WindowInsets.navigationBars,
+                )
             } else {
                 Modifier
             },
         ) {
-            if (style != Compose7Style.Material) {
+            if (!top && style != Compose7Style.Material) {
                 Divider(color = colors.outlineVariant, insetStart = 0.dp)
             }
             Row(
@@ -179,6 +194,9 @@ fun Tabbar(
                         }
                     }
                 }
+            }
+            if (top && style != Compose7Style.Material) {
+                Divider(color = colors.outlineVariant, insetStart = 0.dp)
             }
         }
     }

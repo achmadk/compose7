@@ -48,6 +48,8 @@ import io.github.compose7.foundation.currentMinTouchTarget
  * @param initialMonth Month shown by the pure-Compose calendar before the
  *   selected date is set. Ignored by the wheel.
  * @param nativeBridge Per-component switch; `null` follows the theme.
+ * @param isError Tints the label/chevron and validation slot with the error color.
+ * @param supportingText Validation message slot (PRD §8.5).
  */
 @Composable
 fun DatePicker(
@@ -62,72 +64,79 @@ fun DatePicker(
     minDate: CalendarDate? = null,
     maxDate: CalendarDate? = null,
     nativeBridge: Boolean? = null,
+    isError: Boolean = false,
+    supportingText: (@Composable () -> Unit)? = null,
 ) {
     val colors = Compose7ThemeColors
     val type = Compose7ThemeTypography
     var expanded by rememberSaveable { mutableStateOf(false) }
 
-    Box(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = currentMinTouchTarget())
-                .compose7Clickable(
-                    enabled = enabled,
-                    onClick = { expanded = true },
-                    role = Role.Button,
-                )
-                .padding(horizontal = Compose7StyleInfo.listContentInset, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                if (label != null) {
+    Column(modifier = modifier) {
+        Box {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = currentMinTouchTarget())
+                    .compose7Clickable(
+                        enabled = enabled,
+                        onClick = { expanded = true },
+                        role = Role.Button,
+                    )
+                    .padding(horizontal = Compose7StyleInfo.listContentInset, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    if (label != null) {
+                        BasicText(
+                            text = label,
+                            style = type.labelMedium.copy(
+                                color = if (isError) colors.error else colors.onSurfaceVariant,
+                            ),
+                        )
+                    }
                     BasicText(
-                        text = label,
-                        style = type.labelMedium.copy(color = colors.onSurfaceVariant),
+                        text = selectedDate?.formatted() ?: placeholder,
+                        style = type.bodyLarge.copy(
+                            color = if (selectedDate != null) colors.onSurface else colors.onSurfaceVariant,
+                        ),
                     )
                 }
-                BasicText(
-                    text = selectedDate?.formatted() ?: placeholder,
-                    style = type.bodyLarge.copy(
-                        color = if (selectedDate != null) colors.onSurface else colors.onSurfaceVariant,
-                    ),
-                )
+                Chevron(color = if (isError) colors.error else colors.onSurfaceVariant)
             }
-            Chevron(color = colors.onSurfaceVariant)
-        }
 
-        if (expanded) {
-            if (resolveNativeBridge(nativeBridge)) {
-                NativeDatePicker(
-                    selectedDate = selectedDate,
-                    title = label ?: placeholder,
-                    initialMonth = initialMonth,
-                    firstDayOfWeek = firstDayOfWeek,
-                    minDate = minDate,
-                    maxDate = maxDate,
-                    onDateSelected = {
-                        onDateSelected(it)
-                        expanded = false
-                    },
-                    onDismissRequest = { expanded = false },
-                )
-            } else {
-                PureDatePickerSheet(
-                    selectedDate = selectedDate,
-                    title = label ?: placeholder,
-                    initialMonth = initialMonth,
-                    firstDayOfWeek = firstDayOfWeek,
-                    minDate = minDate,
-                    maxDate = maxDate,
-                    onDateSelected = {
-                        onDateSelected(it)
-                        expanded = false
-                    },
-                    onDismissRequest = { expanded = false },
-                )
+            if (expanded) {
+                if (resolveNativeBridge(nativeBridge)) {
+                    NativeDatePicker(
+                        selectedDate = selectedDate,
+                        title = label ?: placeholder,
+                        initialMonth = initialMonth,
+                        firstDayOfWeek = firstDayOfWeek,
+                        minDate = minDate,
+                        maxDate = maxDate,
+                        onDateSelected = {
+                            onDateSelected(it)
+                            expanded = false
+                        },
+                        onDismissRequest = { expanded = false },
+                    )
+                } else {
+                    PureDatePickerSheet(
+                        selectedDate = selectedDate,
+                        title = label ?: placeholder,
+                        initialMonth = initialMonth,
+                        firstDayOfWeek = firstDayOfWeek,
+                        minDate = minDate,
+                        maxDate = maxDate,
+                        onDateSelected = {
+                            onDateSelected(it)
+                            expanded = false
+                        },
+                        onDismissRequest = { expanded = false },
+                    )
+                }
             }
         }
+        FormFieldSupportingText(isError = isError, supportingText = supportingText)
     }
 }
 

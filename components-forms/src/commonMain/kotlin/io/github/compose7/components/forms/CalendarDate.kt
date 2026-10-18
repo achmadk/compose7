@@ -4,17 +4,22 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 
 /**
- * Minimal calendar date (PRD §8.5, §11) — year, 1-based month, day — with no
+ * Minimal calendar date (PRD §8.5, §11) - year, 1-based month, day - with no
  * kotlinx-datetime dependency. All math is proleptic Gregorian and covered by
  * `commonTest` (PRD §13: unit-tested date logic for the calendar component).
+ *
+ * Comparable so date ranges are a plain `ClosedRange<CalendarDate>` and
+ * range selection can reuse `minOf`/`maxOf`.
  */
-data class CalendarDate(val year: Int, val month: Int, val day: Int) {
+data class CalendarDate(val year: Int, val month: Int, val day: Int) : Comparable<CalendarDate> {
     init {
         require(month in 1..12) { "month must be 1..12, was $month" }
         require(day in 1..daysInMonth(year, month)) {
             "day must be 1..${daysInMonth(year, month)} for $year-$month, was $day"
         }
     }
+
+    override fun compareTo(other: CalendarDate): Int = toEpochDay().compareTo(other.toEpochDay())
 }
 
 /** Gregorian leap-year rule (centuries are leap only when divisible by 400). */

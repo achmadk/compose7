@@ -1,6 +1,8 @@
 package io.github.compose7.components.overlays
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,6 +25,7 @@ import io.github.compose7.core.theme.Compose7Style
 import io.github.compose7.core.theme.Compose7ThemeColors
 import io.github.compose7.core.theme.Compose7ThemeShapes
 import io.github.compose7.core.theme.currentCompose7Style
+import io.github.compose7.core.theme.Compose7Motion
 import io.github.compose7.foundation.Compose7Surface
 
 /**
@@ -61,6 +64,7 @@ fun Popover(
     val colors = Compose7ThemeColors
     val shapes = Compose7ThemeShapes
     val motion = Compose7MotionTokens
+    val style = currentCompose7Style
 
     ComposePopup(
         onDismissRequest = onDismissRequest,
@@ -69,14 +73,8 @@ fun Popover(
     ) {
         AnimatedVisibility(
             visible = true,
-            enter = fadeIn(tween(motion.fastDurationMs, easing = motion.emphasizedEasing)) +
-                scaleIn(
-                    initialScale = 0.92f,
-                    animationSpec = tween(motion.fastDurationMs, easing = motion.emphasizedEasing),
-                    transformOrigin = androidx.compose.ui.graphics.TransformOrigin.Center,
-                ),
-            exit = fadeOut(tween(motion.fastDurationMs, easing = motion.standardEasing)) +
-                scaleOut(targetScale = 0.96f, animationSpec = tween(motion.fastDurationMs, easing = motion.standardEasing)),
+            enter = popupEnter(style, motion),
+            exit = popupExit(style, motion),
         ) {
             Compose7Surface(
                 modifier = modifier.padding(8.dp).widthIn(max = 320.dp),
@@ -118,6 +116,7 @@ fun Popup(
     val colors = Compose7ThemeColors
     val shapes = Compose7ThemeShapes
     val motion = Compose7MotionTokens
+    val style = currentCompose7Style
 
     ComposePopup(
         onDismissRequest = onDismissRequest,
@@ -126,10 +125,8 @@ fun Popup(
     ) {
         AnimatedVisibility(
             visible = true,
-            enter = fadeIn(tween(motion.fastDurationMs, easing = motion.emphasizedEasing)) +
-                scaleIn(initialScale = 0.94f, animationSpec = tween(motion.fastDurationMs, easing = motion.emphasizedEasing)),
-            exit = fadeOut(tween(motion.fastDurationMs, easing = motion.standardEasing)) +
-                scaleOut(targetScale = 0.96f, animationSpec = tween(motion.fastDurationMs, easing = motion.standardEasing)),
+            enter = popupEnter(style, motion),
+            exit = popupExit(style, motion),
         ) {
             Compose7Surface(
                 modifier = modifier.padding(8.dp).widthIn(max = 360.dp),
@@ -145,4 +142,26 @@ fun Popup(
             }
         }
     }
+}
+
+/**
+ * Style-specific popup motion (PRD §8.4: platform-idiomatic presentation).
+ * Cupertino grows from slightly larger (the native popover zoom), Material
+ * scales up from below the resting size, DesktopUI7 is a quiet quick scale.
+ */
+private fun popupEnter(style: Compose7Style, motion: Compose7Motion): EnterTransition {
+    val spec = tween<Float>(motion.fastDurationMs, easing = motion.emphasizedEasing)
+    return fadeIn(tween(motion.fastDurationMs, easing = motion.emphasizedEasing)) +
+        when (style) {
+            Compose7Style.Cupertino -> scaleIn(initialScale = 1.04f, animationSpec = spec)
+            Compose7Style.DesktopUI7 -> scaleIn(initialScale = 0.98f, animationSpec = spec)
+            else -> scaleIn(initialScale = 0.92f, animationSpec = spec)
+        }
+}
+
+private fun popupExit(style: Compose7Style, motion: Compose7Motion): ExitTransition {
+    val spec = tween<Float>(motion.fastDurationMs, easing = motion.standardEasing)
+    val target = if (style == Compose7Style.Cupertino) 1.02f else 0.96f
+    return fadeOut(tween(motion.fastDurationMs, easing = motion.standardEasing)) +
+        scaleOut(targetScale = target, animationSpec = spec)
 }
