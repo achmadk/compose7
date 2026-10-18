@@ -1,15 +1,24 @@
 package io.github.compose7.sample.screens
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import io.github.compose7.components.buttons.BadgeCount
 import io.github.compose7.components.data.Accordion
 import io.github.compose7.components.data.Breadcrumbs
@@ -32,6 +41,8 @@ import io.github.compose7.core.theme.Compose7ThemeColors
 import io.github.compose7.core.theme.Compose7ThemeTypography
 import io.github.compose7.foundation.Check
 import io.github.compose7.foundation.Divider
+import io.github.compose7.foundation.InfiniteScrollEffect
+import io.github.compose7.foundation.PullToRefresh
 
 private val InboxRows = listOf(
     "Design review notes",
@@ -45,6 +56,17 @@ private val InboxRows = listOf(
 @Composable
 fun ListsScreen() {
     var expanded by remember { mutableStateOf(setOf(0)) }
+    var refreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    var virtualCount by remember { mutableIntStateOf(12) }
+    val virtualState = rememberLazyListState()
+
+    // Triggers once the user nears the end; the list then grows by a page.
+    InfiniteScrollEffect(
+        state = virtualState,
+        enabled = virtualCount < 60,
+        onLoadMore = { virtualCount = (virtualCount + 12).coerceAtMost(60) },
+    )
 
     DemoSection("List rows") {
         List(style = ListStyle.Plain) {
@@ -132,15 +154,47 @@ fun ListsScreen() {
         )
     }
 
-    DemoSection("Virtual list") {
-        VirtualList(modifier = Modifier.size(width = 320.dp, height = 180.dp)) {
-            items(count = 40) { index ->
+    DemoSection("Virtual list + infinite scroll") {
+        DemoCaption("Rows append as you approach the end (12 → 60).")
+        VirtualList(
+            state = virtualState,
+            modifier = Modifier.size(width = 320.dp, height = 180.dp),
+        ) {
+            items(count = virtualCount) { index ->
                 ListItem(
                     title = "Virtual row ${index + 1}",
                     subtitle = "Only visible rows compose",
-                    showDivider = index < 39,
+                    showDivider = index < virtualCount - 1,
                     onClick = {},
                 )
+            }
+        }
+    }
+
+    DemoSection("Pull to refresh") {
+        DemoCaption("Drag the list down past the threshold, then release.")
+        PullToRefresh(
+            isRefreshing = refreshing,
+            onRefresh = {
+                refreshing = true
+                scope.launch {
+                    delay(1_200)
+                    refreshing = false
+                }
+            },
+            modifier = Modifier.size(width = 320.dp, height = 200.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                repeat(12) { index ->
+                    ListItem(
+                        title = "Refreshable row ${index + 1}",
+                        showDivider = index < 11,
+                    )
+                }
             }
         }
     }
