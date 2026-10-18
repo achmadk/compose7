@@ -77,11 +77,7 @@ fun Autocomplete(
     var anchorBounds by remember { mutableStateOf(IntRect.Zero) }
 
     val suggestions = remember(current, options, minQueryLength, suggestionLimit) {
-        if (current.length < minQueryLength) {
-            emptyList()
-        } else {
-            options.filter { it.contains(current, ignoreCase = true) }.take(suggestionLimit)
-        }
+        filterSuggestions(current, options, minQueryLength, suggestionLimit)
     }
     val dropdownVisible = expanded && focused && suggestions.isNotEmpty()
     val positionProvider = remember(anchorBounds) { BelowAnchorPositionProvider(anchorBounds) }
@@ -146,6 +142,22 @@ fun Autocomplete(
             }
         }
     }
+}
+
+/**
+ * Suggestions for [Autocomplete]: nothing below [minQueryLength], otherwise
+ * case-insensitive substring matches in source order, capped at [limit].
+ * Extracted so the filtering rule is unit-tested rather than baked into the
+ * composable (PRD §13).
+ */
+internal fun filterSuggestions(
+    query: String,
+    options: List<String>,
+    minQueryLength: Int = 1,
+    limit: Int = 8,
+): List<String> {
+    if (query.length < minQueryLength || limit <= 0) return emptyList()
+    return options.filter { it.contains(query, ignoreCase = true) }.take(limit)
 }
 
 /** Places the popup directly under the anchor, flipping above when out of room. */

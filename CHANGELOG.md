@@ -27,21 +27,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `ListButton`, `ListSection`, `ContactsList`, `Swipeout`, `SortableList`,
   `ListIndex`, `VirtualList`.
 - **Overlays** (`components-overlays`): `Dialog` (+ destructive actions),
-  `ActionSheet`, `SheetModal` (drag-to-dismiss), `Popover`, `Popup`,
-  `Toast`, `Tooltip`.
+  `ActionSheet`, `ShareSheet`, `SheetModal` (drag-to-dismiss), `Popover`,
+  `Popup`, `Toast`, `Tooltip`.
 - **Forms** (`components-forms`): `TextField`, `TextArea`, `Checkbox`,
   `Radio`/`RadioGroup`, `Switch`, `Stepper`, `Slider`, `RangeSlider`,
   `SmartSelect`, `Autocomplete`, `Calendar` (+ `CalendarDate` date math),
-  `ColorPicker`.
+  `DatePicker`, `ColorPicker`.
 - **Data display** (`components-data`): `Accordion` (single/multiple),
   `Timeline`, `Breadcrumbs`.
 - **Media** (`components-media`): `Swiper`, `PhotoBrowser`.
 - **Messaging** (`components-messaging`): `MessageList`, `MessageBar`.
 - **Templates** (`templates`): `LoginTemplate`.
-- **Native Interop Bridge (iOS, opt-in)**: `Dialog` and `ActionSheet` can
-  render through real `UIAlertController` views; list and rollout order in
-  [docs/NATIVE_BRIDGE.md](docs/NATIVE_BRIDGE.md). Pure Compose remains the
-  default on every platform.
+- **Native Interop Bridge (iOS, opt-in)**: `Dialog`, `ActionSheet`,
+  `DatePicker` (wheel), and `ShareSheet` can render through real UIKit views
+  (`UIAlertController`, `UIDatePicker`, `UIActivityViewController`); list and
+  rollout order in [docs/NATIVE_BRIDGE.md](docs/NATIVE_BRIDGE.md). Pure Compose
+  remains the default on every platform.
+- **Unit tests** for calendar bounds, autocomplete filtering, and the
+  share-sheet fallback ordering (`commonTest`, run on the desktop target).
 - **Sample app** (`sample-app`, `desktop-app`, `android-app`): Kitchen Sink
   gallery exercising every component in every style.
 

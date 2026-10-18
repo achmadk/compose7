@@ -22,6 +22,7 @@ import io.github.compose7.components.forms.Calendar
 import io.github.compose7.components.forms.CalendarDate
 import io.github.compose7.components.forms.Checkbox
 import io.github.compose7.components.forms.ColorPicker
+import io.github.compose7.components.forms.DatePicker
 import io.github.compose7.components.forms.RadioGroup
 import io.github.compose7.components.forms.RadioOption
 import io.github.compose7.components.forms.RangeSlider
@@ -154,6 +155,14 @@ fun FormsScreen() {
             onSuggestionSelected = { city = it },
             label = "City",
             placeholder = "Start typing",
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(12.dp))
+        DatePicker(
+            selectedDate = date,
+            onDateSelected = { date = it },
+            label = "Due date",
+            minDate = CalendarDate(2026, 1, 1),
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(12.dp))

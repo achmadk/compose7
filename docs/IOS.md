@@ -97,11 +97,16 @@ exported to Swift as `MainViewControllerKt.MainViewController()`.
 ## Verifying the native bridge
 
 The gallery's shell has a **Native bridge** switch (`ShellScreen.kt`), backed by
-`Compose7Theme(nativeBridge = ...)`. With it on, the Dialog and Action Sheet
-demos render through `UIAlertController`; the component keeps its pure-Compose
-fallback for any dialog that passes a custom `content` slot. See
-[NATIVE_BRIDGE.md](NATIVE_BRIDGE.md) for the contract and the remaining
-component list.
+`Compose7Theme(nativeBridge = ...)`. With it on:
+- the Dialog and Action Sheet demos render through `UIAlertController`;
+- the Forms screen's **Due date** field opens a real `UIDatePicker` wheel;
+- the Overlays **Share sheet** button opens the system
+  `UIActivityViewController`.
+
+The component keeps its pure-Compose fallback for any dialog that passes a
+custom `content` slot, and every path outside iOS (including a `DatePicker`
+with the bridge forced off). See [NATIVE_BRIDGE.md](NATIVE_BRIDGE.md) for the
+contract and the remaining component list.
 
 ## Troubleshooting
 

@@ -109,12 +109,17 @@ fun ActionSheet(
 - `iosMain` actual → real UIKit (`platform.UIKit` interop).
 - `androidMain`/`desktopMain` actuals → call the pure-Compose implementation
   (bridge is iOS-only; flag is already gated, actuals are just for compilation).
-- Native path renders **data only** (title/message/actions); if a composable
-  slot is in use, fall back to pure (documented — no silent divergence).
-- UIKit code cannot be compiled on Windows — keep it minimal, use boring,
+- Native path renders **data only** (title/message/actions, a date plus
+  min/max bounds, share items); if a composable slot is in use, fall back to
+  pure (documented — no silent divergence). A predicate the UIKit control
+  cannot express (for example arbitrary disabled dates) is a reason to expose
+  bounds instead, not to silently ignore it.
+- UIKit code cross-compiles as a klib on any host (that is how it is
+  type-checked in a plain `./gradlew build`); keep it minimal and use boring,
   well-known APIs (`UIAlertController`, `UIAlertAction`, `UIDatePicker`,
-  `UIActivityViewController`), and comment every bridge file header:
-  `// Compiles only on macOS hosts — keep UIKit usage conservative.`
+  `UIActivityViewController`). Linking an app/framework still needs macOS +
+  Xcode. Bridge files start with:
+  `// Cross-compiled as a klib on any host; keep UIKit usage conservative.`
 
 ## 7. Testing (PRD §13)
 

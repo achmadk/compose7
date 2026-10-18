@@ -29,7 +29,7 @@ import platform.UIKit.popoverPresentationController
  * element types.
  */
 @OptIn(ExperimentalForeignApi::class)
-private fun compose7TopViewController(): UIViewController? {
+internal fun compose7TopViewController(): UIViewController? {
     val application = UIApplication.sharedApplication
     val scenes = application.connectedScenes.filterIsInstance<UIWindowScene>()
     val scene = scenes.firstOrNull { it.activationState == UISceneActivationStateForegroundActive }

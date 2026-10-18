@@ -41,12 +41,13 @@ Every public entry point in Compose7, grouped the way PRD §7 groups them.
 |---|---|
 | `TextField` · `TextArea` | P0 |
 | `Checkbox` · `Radio`/`RadioGroup` · `Switch` · `Stepper` · `Slider` · `RangeSlider` | P0 |
-| `SmartSelect` · `Autocomplete` · `Calendar` (+ `CalendarDate`) · `ColorPicker` | P1/P2 |
+| `SmartSelect` · `Autocomplete` · `Calendar` (+ `CalendarDate`) · `DatePicker` · `ColorPicker` | P1/P2 |
 
 ## Overlays — `components-overlays`
 
-`Dialog` · `ActionSheet` · `SheetModal` · `Popover` · `Popup` · `Toast` ·
-`Tooltip`. `Dialog` and `ActionSheet` can route through the opt-in iOS Native
+`Dialog` · `ActionSheet` · `ShareSheet` · `SheetModal` · `Popover` · `Popup` ·
+`Toast` · `Tooltip`. `Dialog`, `ActionSheet`, `DatePicker` (in
+`components-forms`), and `ShareSheet` can route through the opt-in iOS Native
 Interop Bridge — see [NATIVE_BRIDGE.md](NATIVE_BRIDGE.md).
 
 ## Media — `components-media`

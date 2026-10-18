@@ -41,6 +41,9 @@ import io.github.compose7.components.overlays.Dialog
 import io.github.compose7.components.overlays.DialogAction
 import io.github.compose7.components.overlays.DialogActionRole
 import io.github.compose7.components.overlays.Popup
+import io.github.compose7.components.overlays.ShareItem
+import io.github.compose7.components.overlays.ShareItemKind
+import io.github.compose7.components.overlays.ShareSheet
 import io.github.compose7.components.overlays.SheetModal
 import io.github.compose7.components.overlays.Toast
 import io.github.compose7.components.overlays.Tooltip
@@ -70,6 +73,7 @@ fun MediaScreen() {
     var dialogVisible by remember { mutableStateOf(false) }
     var sheetVisible by remember { mutableStateOf(false) }
     var actionSheetVisible by remember { mutableStateOf(false) }
+    var shareSheetVisible by remember { mutableStateOf(false) }
     var popupVisible by remember { mutableStateOf(false) }
     var toastText by remember { mutableStateOf<String?>(null) }
     var photoBrowserVisible by remember { mutableStateOf(false) }
@@ -110,6 +114,11 @@ fun MediaScreen() {
             ) {
                 Button(onClick = {}, text = "Tooltip", variant = ButtonVariant.Outline)
             }
+            Button(
+                onClick = { shareSheetVisible = true },
+                text = "Share sheet",
+                variant = ButtonVariant.Text,
+            )
         }
     }
 
@@ -235,6 +244,18 @@ fun MediaScreen() {
                     onClick = { actionSheetVisible = false },
                 ),
             ),
+        )
+    }
+
+    if (shareSheetVisible) {
+        ShareSheet(
+            visible = true,
+            onDismissRequest = { shareSheetVisible = false },
+            items = listOf(
+                ShareItem("Copy text", "The Compose7 gallery"),
+                ShareItem("Copy link", "https://github.com/compose7/compose7", ShareItemKind.Link),
+            ),
+            onItemSelected = { shareSheetVisible = false },
         )
     }
 

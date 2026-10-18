@@ -30,13 +30,13 @@ Compose — it never crashes.
 
 ## Finalized component list & rollout order
 
-| # | Component | UIKit surface | Phase | Rationale |
-|---|-----------|---------------|-------|-----------|
-| 1 | `Dialog` (Alert) | `UIAlertController` (alert style) | 1 | Highest drift risk: alert chrome changes with every major iOS release; data-only API maps 1:1. |
-| 2 | `ActionSheet` | `UIAlertController` (action-sheet style) | 1 | Same controller family as Alert — nearly free once #1 exists; iPad popover anchoring handled. |
-| 3 | `DatePicker` (wheel) | `UIDatePicker` (wheels style) | 2 | The date wheel is famously hard to match by hand; the pure-Compose calendar remains the cross-platform default. |
-| 4 | Share sheet | `UIActivityViewController` | 2 | System share UI is per-definitionally native (share extensions, entitlements); pure-Compose cannot replicate it. |
-| 5 | `ContextMenu` | `UIContextMenuInteraction` | 2 | System haptics + preview annotations are UIKit-owned behavior. |
+| # | Component | UIKit surface | Phase | Status | Rationale |
+|---|-----------|---------------|-------|--------|-----------|
+| 1 | `Dialog` (Alert) | `UIAlertController` (alert style) | 1 | Shipped | Highest drift risk: alert chrome changes with every major iOS release; data-only API maps 1:1. |
+| 2 | `ActionSheet` | `UIAlertController` (action-sheet style) | 1 | Shipped | Same controller family as Alert — nearly free once #1 exists; iPad popover anchoring handled. |
+| 3 | `DatePicker` (wheel) | `UIDatePicker` (wheels style) | 2 | Shipped | The date wheel is famously hard to match by hand; the pure-Compose calendar remains the cross-platform default. |
+| 4 | `ShareSheet` | `UIActivityViewController` | 2 | Shipped | System share UI is per-definitionally native (share extensions, entitlements); pure-Compose cannot replicate it. |
+| 5 | `ContextMenu` | `UIContextMenuInteraction` | 2 | Not shipped | System haptics + preview annotations are UIKit-owned behavior. Needs an interaction delegate plus preview providers; tracked for the next bridge PR. |
 
 Deferred (candidates for post-1.0, not committed):
 
@@ -45,17 +45,30 @@ Deferred (candidates for post-1.0, not committed):
   switch design again.
 - `UIPickerView` wheel beyond dates — only if a concrete consumer asks.
 
-## Contract (implemented in `components-overlays`)
+## Contract (implemented in `components-overlays` and `components-forms`)
 
-- commonMain declares `expect fun NativeDialog(…)` / `NativeActionSheet(…)`
-  taking **data only** (title, message, actions) — never composable slots
-  (PRD §8.7).
+- commonMain declares `expect fun NativeX(…)` taking **data only** — never
+  composable slots (PRD §8.7). That is why `DatePicker` exposes
+  `minDate`/`maxDate` instead of a `(CalendarDate) -> Boolean` predicate
+  (`UIDatePicker` has `minimumDate`/`maximumDate`), and `ShareSheet` takes
+  `ShareItem` values instead of a render callback.
 - `iosMain` actuals present real UIKit controllers from the top-most view
-  controller, with correct action roles (default/destructive/cancel) and
-  iPad popover anchoring for action sheets.
+  controller:
+  - `NativeDialog`/`NativeActionSheet` — correct action roles and iPad popover
+    anchoring.
+  - `NativeDatePicker` — a `UIDatePicker` (wheels) inside a page-sheet
+    navigation controller with the system Cancel/Done items. The sheet is not
+    interactively dismissible, so the call site's `expanded` flag stays the
+    single source of truth.
+  - `NativeShareSheet` — `UIActivityViewController` with iPad popover anchoring
+    and a completion handler that always reaches `onDismissRequest`.
 - `androidMain`/`desktopMain` actuals delegate to the pure implementation;
   they exist only so the `expect` compiles — `resolveNativeBridge()` already
   gates the native path to iOS.
+- **Pure fallbacks:** `Dialog`/`ActionSheet` render Compose chrome;
+  `DatePicker` opens the Compose `Calendar`; `ShareSheet` renders an
+  `ActionSheet` of the items and calls `onItemSelected`, which the native path
+  never invokes (the system owns the action list there).
 - **Composable-slot escape hatch:** if a caller passes a custom `content` slot
   to `Dialog`/`ActionSheet`, the component renders pure Compose even when the
   bridge is enabled, because UIKit cannot host a Compose slot in these
