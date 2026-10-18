@@ -7,8 +7,10 @@ import platform.UIKit.UIViewController
  * iOS host entry point for the Kitchen Sink (PRD §16).
  *
  * Swift side: `MainViewControllerKt.MainViewController()` inside a
- * `UIHostingController`-style wrapper - see README for the Xcode wiring.
- * Compiled only on macOS hosts / the macOS CI job.
+ * `UIViewControllerRepresentable`. The framework is built/linked by
+ * `:sample-app:linkDebugFramework*` or Xcode's
+ * `embedAndSignAppleFrameworkForXcode` - see docs/IOS.md.
+ * Linking needs macOS + Xcode; the klib itself compiles on any host.
  */
 fun MainViewController(): UIViewController = ComposeUIViewController {
     Compose7SampleApp()

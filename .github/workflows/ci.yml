@@ -59,7 +59,7 @@ jobs:
         run: ./gradlew :android-app:assembleDebug --stacktrace
 
   ios-sim:
-    name: iOS compile check (bridge klibs)
+    name: iOS compile & link (simulator)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -78,3 +78,8 @@ jobs:
       # real app/framework is what needs Xcode.
       - name: Compile iOS simulator target
         run: ./gradlew compileKotlinIosSimulatorArm64 --stacktrace
+
+      # Klib compilation type-checks source; linking proves the sample actually
+      # binary-links UIKit + Compose. No signing identity is involved.
+      - name: Link sample framework (simulator)
+        run: ./gradlew :sample-app:linkDebugFrameworkIosSimulatorArm64 --stacktrace
